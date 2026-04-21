@@ -1,0 +1,10 @@
+{
+  "name": "gundam-api",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Minimal REST API skeleton for the gundam monorepo",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js"
+  }
+}

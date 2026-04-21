@@ -1,0 +1,11 @@
+simulator.db
+*.db
+
+build/
+cmake-build-*/
+CMakeFiles/
+CMakeCache.txt
+Makefile
+compile_commands.json
+
+node_modules/
