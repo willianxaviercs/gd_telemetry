@@ -2,22 +2,35 @@ syntax = "proto3";
 
 package gundam.v1;
 
+enum EventType {
+  UNSPECIFIED = 0;
+  TEMPERATURE_READING = 1;
+  STATUS_UPDATE = 2;
+}
+
+enum DeviceStatus {
+  STATUS_UNSPECIFIED = 0;
+  ONLINE = 1;
+  OFFLINE = 2;
+  ERROR = 3;
+}
+
 message TemperatureReading {
   double celsius = 1;
 }
 
 message StatusUpdate {
-  string status = 1;
+  DeviceStatus status = 1;
 }
 
 message DeviceEvent {
-  int64 Id          = 1;
-  int64 DeviceId    = 2;
-  int64 Timestamp   = 3;
-  EventType Type    = 4;
+  uint64 event_id = 1;
+  uint64 device_id = 2;
+  uint64 timestamp_unix_ms = 3;
+  EventType type = 4;
 
-  oneof Payload {
-    TemperatureReading TemperatureReading = 5;
-    StatusUpdate       StatusUpdate       = 6;
+  oneof payload {
+    TemperatureReading temperature_reading = 5;
+    StatusUpdate status_update = 6;
   }
 }

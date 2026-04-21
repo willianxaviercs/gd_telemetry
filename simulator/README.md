@@ -1,8 +1,41 @@
 # Simulator
 
-Minimal process placeholder for:
+Local per-device process for:
 
 - generating fake device events
-- writing them into local SQLite
+- writing them into the device SQLite database
 
-Current status: only a basic Python entrypoint exists.
+## SQLite Schema
+
+The local database schema lives in [schema/sqlite/device_events.sql](/home/xavier/programming/agent-coding/gundam/schema/sqlite/device_events.sql).
+
+It stays close to the protobuf envelope while keeping SQLite practical for polling:
+
+- `id` is the local SQLite row identifier that the collector can poll on
+- `device_id`, `timestamp_unix_ms`, and `type` map directly to `DeviceEvent`
+- `temperature_celsius` maps to `TemperatureReading.celsius`
+- `status` maps to `StatusUpdate.status`
+
+The table stays flat on purpose so the collector can convert one SQLite row into one protobuf event with minimal reshaping.
+
+## Usage
+
+The simulator derives the SQLite path from the device ID and the repo runtime layout:
+
+```bash
+python3 simulator/main.py --device-id 1000 --interval-seconds 60
+```
+
+That writes to:
+
+```text
+runtime/devices/device-1000/device.db
+```
+
+It inserts one random event every `--interval-seconds`.
+
+```bash
+python3 simulator/main.py --device-id 1000 --interval-seconds 5
+```
+
+When started through the runtime scripts, the interval comes from `SIMULATOR_INTERVAL_SECONDS` in [runtime/topology/devices.env](/home/xavier/programming/agent-coding/gundam/runtime/topology/devices.env:1).

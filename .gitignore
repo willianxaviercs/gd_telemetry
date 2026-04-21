@@ -9,3 +9,7 @@ Makefile
 compile_commands.json
 
 node_modules/
+__pycache__/
+
+runtime/devices/*
+!runtime/devices/.gitkeep

@@ -28,6 +28,14 @@ Minimal distributed-system scaffold based on the design doc.
 ├── proto
 │   ├── README.md
 │   └── device_event.proto
+├── runtime
+│   ├── README.md
+│   ├── bin
+│   ├── devices
+│   └── topology
+├── schema
+│   └── sqlite
+│       └── device_events.sql
 └── simulator
     ├── README.md
     └── main.py

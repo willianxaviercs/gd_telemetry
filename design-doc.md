@@ -67,4 +67,4 @@ Do NOT add authentication, frontend, or extra features.
 Focus ONLY on a clean, understandable skeleton.
 We will vendor C++ dependencies (hiredis, sqlite, postgres) so we dont use package manager.
 
-
+codex resume 019dae5a-fa08-7e03-843c-8e5bcdac1987
