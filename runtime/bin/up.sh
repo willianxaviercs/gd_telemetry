@@ -2,9 +2,10 @@
 
 set -euo pipefail
 
-script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-runtime_dir="$(cd "${script_dir}/.." && pwd)"
-devices_dir="${runtime_dir}/devices"
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/base.sh"
+
+runtime_bootstrap
+
 mount_script="${script_dir}/mount-tmpfs.sh"
 create_script="${script_dir}/create-devices.sh"
 init_script="${script_dir}/init-sqlite.sh"

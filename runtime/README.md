@@ -38,10 +38,11 @@ It currently defines:
 - `REDIS_PORT`
 - `REDIS_STREAM`
 
-Device directories are derived from those values as `runtime/devices/device-<id>/`.
+Device directories are derived from those values as `runtime/devices/<id>/`.
 
 ## Scripts
 
+- [runtime/bin/base.sh](/home/xavier/programming/agent-coding/gundam/runtime/bin/base.sh) provides shared runtime bootstrap and common topology/command checks
 - [runtime/bin/mount-tmpfs.sh](/home/xavier/programming/agent-coding/gundam/runtime/bin/mount-tmpfs.sh) mounts `runtime/devices/` as `tmpfs`
 - [runtime/bin/unmount-tmpfs.sh](/home/xavier/programming/agent-coding/gundam/runtime/bin/unmount-tmpfs.sh) unmounts `runtime/devices/`
 - [runtime/bin/create-devices.sh](/home/xavier/programming/agent-coding/gundam/runtime/bin/create-devices.sh) creates the per-device directories
@@ -59,7 +60,7 @@ Typical flow:
 
 With Redis already running on the configured host/port, `up.sh` will:
 
-- create `runtime/devices/device-<id>/`
+- create `runtime/devices/<id>/`
 - initialize one SQLite database per device
 - start one simulator and one collector per device
 - keep writing simulator logs and collector logs inside each device directory

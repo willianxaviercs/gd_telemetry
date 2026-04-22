@@ -2,9 +2,9 @@
 
 set -euo pipefail
 
-script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-runtime_dir="$(cd "${script_dir}/.." && pwd)"
-devices_dir="${runtime_dir}/devices"
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/base.sh"
+
+runtime_bootstrap
 
 if mountpoint -q "${devices_dir}"; then
     echo "runtime/devices is mounted; unmount it before cleaning" >&2

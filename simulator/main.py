@@ -21,7 +21,7 @@ def parse_args() -> argparse.Namespace:
 
 def db_path_for_device(device_id: int) -> Path:
     repo_root = Path(__file__).resolve().parent.parent
-    return repo_root / "runtime" / "devices" / f"device-{device_id}" / "device.db"
+    return repo_root / "runtime" / "devices" / str(device_id) / "device.db"
 
 
 def insert_random_event(connection: sqlite3.Connection, device_id: int) -> tuple[int, int]:

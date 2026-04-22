@@ -2,24 +2,11 @@
 
 set -euo pipefail
 
-script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-repo_root="$(cd "${script_dir}/../.." && pwd)"
-runtime_dir="${repo_root}/runtime"
-topology_file="${runtime_dir}/topology/devices.env"
-devices_dir="${runtime_dir}/devices"
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/base.sh"
 
-if [[ ! -f "${topology_file}" ]]; then
-    echo "missing topology file: ${topology_file}" >&2
-    exit 1
-fi
-
-if ! command -v python3 >/dev/null 2>&1; then
-    echo "python3 is required" >&2
-    exit 1
-fi
-
-# shellcheck disable=SC1090
-source "${topology_file}"
+runtime_bootstrap
+runtime_require_topology
+runtime_require_command python3
 
 : "${DEVICE_ID_START:?DEVICE_ID_START is required}"
 : "${DEVICE_COUNT:?DEVICE_COUNT is required}"

@@ -2,9 +2,9 @@
 
 set -euo pipefail
 
-script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-runtime_dir="$(cd "${script_dir}/.." && pwd)"
-devices_dir="${runtime_dir}/devices"
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/base.sh"
+
+runtime_bootstrap
 size="${1:-256m}"
 
 mkdir -p "${devices_dir}"

@@ -2,28 +2,17 @@
 
 set -euo pipefail
 
-script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-repo_root="$(cd "${script_dir}/../.." && pwd)"
-runtime_dir="${repo_root}/runtime"
-topology_file="${runtime_dir}/topology/devices.env"
-devices_dir="${runtime_dir}/devices"
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/base.sh"
+
+runtime_bootstrap
+
 collector_binary="${repo_root}/collector/build/collector"
 collector_build_script="${repo_root}/collector/build.sh"
 collector_cmake_file="${repo_root}/collector/CMakeLists.txt"
 collector_source_file="${repo_root}/collector/src/main.cpp"
 
-if [[ ! -f "${topology_file}" ]]; then
-    echo "missing topology file: ${topology_file}" >&2
-    exit 1
-fi
-
-if ! command -v bash >/dev/null 2>&1; then
-    echo "bash is required" >&2
-    exit 1
-fi
-
-# shellcheck disable=SC1090
-source "${topology_file}"
+runtime_require_topology
+runtime_require_command bash
 
 : "${DEVICE_ID_START:?DEVICE_ID_START is required}"
 : "${DEVICE_COUNT:?DEVICE_COUNT is required}"
@@ -50,7 +39,7 @@ if [[ ! -x "${collector_binary}" || "${collector_binary}" -ot "${collector_build
 
     (
         cd "${repo_root}/collector"
-        exec "${collector_build_script}"
+        exec "./$(basename "${collector_build_script}")"
     )
 fi
 

@@ -2,18 +2,10 @@
 
 set -euo pipefail
 
-script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-runtime_dir="$(cd "${script_dir}/.." && pwd)"
-topology_file="${runtime_dir}/topology/devices.env"
-devices_dir="${runtime_dir}/devices"
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/base.sh"
 
-if [[ ! -f "${topology_file}" ]]; then
-    echo "missing topology file: ${topology_file}" >&2
-    exit 1
-fi
-
-# shellcheck disable=SC1090
-source "${topology_file}"
+runtime_bootstrap
+runtime_require_topology
 
 : "${DEVICE_ID_START:?DEVICE_ID_START is required}"
 : "${DEVICE_COUNT:?DEVICE_COUNT is required}"

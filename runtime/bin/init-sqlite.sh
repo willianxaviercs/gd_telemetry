@@ -2,30 +2,19 @@
 
 set -euo pipefail
 
-script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-repo_root="$(cd "${script_dir}/../.." && pwd)"
-runtime_dir="${repo_root}/runtime"
-topology_file="${runtime_dir}/topology/devices.env"
-schema_file="${repo_root}/schema/sqlite/device_events.sql"
-devices_dir="${runtime_dir}/devices"
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/base.sh"
 
-if [[ ! -f "${topology_file}" ]]; then
-    echo "missing topology file: ${topology_file}" >&2
-    exit 1
-fi
+runtime_bootstrap
+
+schema_file="${repo_root}/schema/sqlite/device_events.sql"
+runtime_require_topology
 
 if [[ ! -f "${schema_file}" ]]; then
     echo "missing schema file: ${schema_file}" >&2
     exit 1
 fi
 
-if ! command -v sqlite3 >/dev/null 2>&1; then
-    echo "sqlite3 is required" >&2
-    exit 1
-fi
-
-# shellcheck disable=SC1090
-source "${topology_file}"
+runtime_require_command sqlite3
 
 : "${DEVICE_ID_START:?DEVICE_ID_START is required}"
 : "${DEVICE_COUNT:?DEVICE_COUNT is required}"

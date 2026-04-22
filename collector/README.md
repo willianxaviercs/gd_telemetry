@@ -18,7 +18,7 @@ The collector reads from an explicit SQLite path:
 
 ```bash
 ./build/collector/collector \
-  --device-db-path runtime/devices/device-1000/device.db \
+  --device-db-path runtime/devices/0/device.db \
   --poll-interval-seconds 1 \
   --redis-stream device_events
 ```
@@ -27,7 +27,7 @@ Optional Redis connection arguments:
 
 ```bash
 ./build/collector/collector \
-  --device-db-path runtime/devices/device-1000/device.db \
+  --device-db-path runtime/devices/0/device.db \
   --poll-interval-seconds 1 \
   --redis-stream device_events \
   --redis-host 127.0.0.1 \
