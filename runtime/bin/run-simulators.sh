@@ -45,7 +45,7 @@ trap cleanup EXIT INT TERM
 
 for ((offset = 0; offset < DEVICE_COUNT; offset++)); do
     device_id=$((DEVICE_ID_START + offset))
-    device_dir="${devices_dir}/device-${device_id}"
+    device_dir="${devices_dir}/${device_id}"
     db_path="${device_dir}/device.db"
     log_path="${device_dir}/simulator.log"
 

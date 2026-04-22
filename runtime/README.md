@@ -33,6 +33,10 @@ It currently defines:
 - `DEVICE_ID_START`
 - `DEVICE_COUNT`
 - `SIMULATOR_INTERVAL_SECONDS`
+- `COLLECTOR_POLL_INTERVAL_SECONDS`
+- `REDIS_HOST`
+- `REDIS_PORT`
+- `REDIS_STREAM`
 
 Device directories are derived from those values as `runtime/devices/device-<id>/`.
 
@@ -43,6 +47,7 @@ Device directories are derived from those values as `runtime/devices/device-<id>
 - [runtime/bin/create-devices.sh](/home/xavier/programming/agent-coding/gundam/runtime/bin/create-devices.sh) creates the per-device directories
 - [runtime/bin/init-sqlite.sh](/home/xavier/programming/agent-coding/gundam/runtime/bin/init-sqlite.sh) initializes one SQLite database per device from the shared schema
 - [runtime/bin/run-simulators.sh](/home/xavier/programming/agent-coding/gundam/runtime/bin/run-simulators.sh) starts one simulator per device and writes logs into each device directory
+- [runtime/bin/run-collectors.sh](/home/xavier/programming/agent-coding/gundam/runtime/bin/run-collectors.sh) starts one collector per device and publishes new SQLite rows into Redis Streams
 - [runtime/bin/up.sh](/home/xavier/programming/agent-coding/gundam/runtime/bin/up.sh) prepares runtime state, starts all simulators, and cleans up on exit
 - [runtime/bin/clean.sh](/home/xavier/programming/agent-coding/gundam/runtime/bin/clean.sh) removes generated device directories when `runtime/devices/` is not mounted
 
@@ -51,6 +56,14 @@ Typical flow:
 ```bash
 ./runtime/bin/up.sh
 ```
+
+With Redis already running on the configured host/port, `up.sh` will:
+
+- create `runtime/devices/device-<id>/`
+- initialize one SQLite database per device
+- start one simulator and one collector per device
+- keep writing simulator logs and collector logs inside each device directory
+- clean generated device state on exit, while leaving Redis untouched
 
 Cleanup flow:
 
@@ -66,6 +79,7 @@ Manual simulator flow:
 ./runtime/bin/create-devices.sh
 ./runtime/bin/init-sqlite.sh
 ./runtime/bin/run-simulators.sh
+./runtime/bin/run-collectors.sh
 ```
 
 If mounting `tmpfs` is not desired for a given run, `up.sh` also supports:

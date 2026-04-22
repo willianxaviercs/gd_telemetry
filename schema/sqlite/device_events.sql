@@ -20,3 +20,12 @@ CREATE INDEX IF NOT EXISTS idx_device_events_timestamp_unix_ms
 
 CREATE INDEX IF NOT EXISTS idx_device_events_type
     ON device_events (type);
+
+CREATE TABLE IF NOT EXISTS collector_state (
+    id INTEGER PRIMARY KEY CHECK (id = 1),
+    last_published_id INTEGER NOT NULL
+);
+
+INSERT INTO collector_state (id, last_published_id)
+VALUES (1, 0)
+ON CONFLICT(id) DO NOTHING;
