@@ -43,48 +43,45 @@ Device directories are derived from those values as `runtime/devices/<id>/`.
 ## Scripts
 
 - [runtime/bin/base.sh](/home/xavier/programming/agent-coding/gundam/runtime/bin/base.sh) provides shared runtime bootstrap and common topology/command checks
+- [runtime/bin/prepare.sh](/home/xavier/programming/agent-coding/gundam/runtime/bin/prepare.sh) recreates per-device SQLite state from the topology and schema
+- [runtime/bin/start.sh](/home/xavier/programming/agent-coding/gundam/runtime/bin/start.sh) starts simulators and collectors in the background and stores PID files under `runtime/run/`
+- [runtime/bin/stop.sh](/home/xavier/programming/agent-coding/gundam/runtime/bin/stop.sh) stops background simulators and collectors tracked in `runtime/run/`
 - [runtime/bin/mount-tmpfs.sh](/home/xavier/programming/agent-coding/gundam/runtime/bin/mount-tmpfs.sh) mounts `runtime/devices/` as `tmpfs`
 - [runtime/bin/unmount-tmpfs.sh](/home/xavier/programming/agent-coding/gundam/runtime/bin/unmount-tmpfs.sh) unmounts `runtime/devices/`
-- [runtime/bin/create-devices.sh](/home/xavier/programming/agent-coding/gundam/runtime/bin/create-devices.sh) creates the per-device directories
-- [runtime/bin/init-sqlite.sh](/home/xavier/programming/agent-coding/gundam/runtime/bin/init-sqlite.sh) initializes one SQLite database per device from the shared schema
-- [runtime/bin/run-simulators.sh](/home/xavier/programming/agent-coding/gundam/runtime/bin/run-simulators.sh) starts one simulator per device and writes logs into each device directory
-- [runtime/bin/run-collectors.sh](/home/xavier/programming/agent-coding/gundam/runtime/bin/run-collectors.sh) starts one collector per device and publishes new SQLite rows into Redis Streams
-- [runtime/bin/up.sh](/home/xavier/programming/agent-coding/gundam/runtime/bin/up.sh) prepares runtime state, starts all simulators, and cleans up on exit
-- [runtime/bin/clean.sh](/home/xavier/programming/agent-coding/gundam/runtime/bin/clean.sh) removes generated device directories when `runtime/devices/` is not mounted
+- [runtime/bin/up.sh](/home/xavier/programming/agent-coding/gundam/runtime/bin/up.sh) is a thin compatibility wrapper around `prepare.sh` and `start.sh`
+- [runtime/bin/clean.sh](/home/xavier/programming/agent-coding/gundam/runtime/bin/clean.sh) removes generated device directories and PID files when `runtime/devices/` is not mounted
 
 Typical flow:
 
 ```bash
-./runtime/bin/up.sh
+make up
 ```
 
-With Redis already running on the configured host/port, `up.sh` will:
+With Redis already running on the configured host/port, `prepare.sh` and `start.sh` will:
 
 - create `runtime/devices/<id>/`
 - initialize one SQLite database per device
 - start one simulator and one collector per device
 - keep writing simulator logs and collector logs inside each device directory
-- clean generated device state on exit, while leaving Redis untouched
+- write PID files under `runtime/run/`
 
 Cleanup flow:
 
 ```bash
-./runtime/bin/unmount-tmpfs.sh
-./runtime/bin/clean.sh
+make down
 ```
 
 Manual simulator flow:
 
 ```bash
-./runtime/bin/mount-tmpfs.sh
-./runtime/bin/create-devices.sh
-./runtime/bin/init-sqlite.sh
-./runtime/bin/run-simulators.sh
-./runtime/bin/run-collectors.sh
+make collector-build
+docker compose -f infra/docker-compose.yml up -d --wait redis postgres
+./runtime/bin/prepare.sh
+./runtime/bin/start.sh
 ```
 
-If mounting `tmpfs` is not desired for a given run, `up.sh` also supports:
+To stop runtime processes without touching Redis or Postgres:
 
 ```bash
-RUNTIME_SKIP_TMPFS_MOUNT=1 ./runtime/bin/up.sh
+./runtime/bin/stop.sh
 ```

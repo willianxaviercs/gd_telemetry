@@ -8,10 +8,11 @@ runtime_bootstrap() {
     runtime_dir="$(cd "${script_dir}/.." && pwd)"
     repo_root="$(cd "${runtime_dir}/.." && pwd)"
     devices_dir="${runtime_dir}/devices"
+    run_dir="${runtime_dir}/run"
     topology_file="${runtime_dir}/topology/devices.env"
 }
 
-runtime_require_topology() {
+runtime_load_topology() {
     if [[ ! -f "${topology_file}" ]]; then
         echo "missing topology file: ${topology_file}" >&2
         exit 1

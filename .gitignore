@@ -7,11 +7,14 @@ build/
 cmake-build-*/
 CMakeFiles/
 CMakeCache.txt
-Makefile
 compile_commands.json
+**/Makefile
+!/Makefile
 
 node_modules/
 __pycache__/
 
 runtime/devices/*
 !runtime/devices/.gitkeep
+runtime/run/*
+!runtime/run/.gitkeep
