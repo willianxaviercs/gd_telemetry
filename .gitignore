@@ -4,6 +4,7 @@ simulator.db
 *.db
 
 build/
+edge-daemon/build/
 cmake-build-*/
 CMakeFiles/
 CMakeCache.txt

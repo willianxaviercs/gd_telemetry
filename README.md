@@ -6,12 +6,13 @@ Minimal distributed-system scaffold based on the design doc.
 
 ```text
 .
+├── CMakeLists.txt
 ├── api
 │   ├── README.md
 │   ├── package.json
 │   └── src
 │       └── server.js
-├── collector
+├── edge-daemon
 │   ├── CMakeLists.txt
 │   ├── README.md
 │   └── src
@@ -33,9 +34,17 @@ Minimal distributed-system scaffold based on the design doc.
 │   ├── bin
 │   ├── devices
 │   └── topology
+├── shared
+│   ├── CMakeLists.txt
+│   ├── include
+│   └── src
 ├── schema
 │   └── sqlite
 │       └── device_events.sql
+├── vendor
+│   ├── README.md
+│   ├── hiredis
+│   └── sqlite3
 └── simulator
     ├── README.md
     └── main.py
@@ -44,8 +53,9 @@ Minimal distributed-system scaffold based on the design doc.
 ## Notes
 
 - This repo only provides the initial skeleton.
-- Service entrypoints are intentionally minimal.
-- C++ services are set up to allow vendored native dependencies later.
+- C++ applications build from the repo root through CMake subdirectories.
+- Shared C++ code now lives under `shared/`, including helpers and protobuf codegen wiring.
+- Native dependencies are intended to be shared from `vendor/`, with system installs used as a fallback when available.
 
 ## Local Dev
 
@@ -57,10 +67,10 @@ make up
 
 That will:
 
-- build the collector
+- build the edge daemon
 - start Redis and Postgres with Docker Compose
 - prepare per-device SQLite state under `runtime/devices/`
-- start simulators and collectors in the background
+- start simulators and edge daemons in the background
 
 To stop everything and remove local runtime plus Redis/Postgres data:
 
@@ -72,4 +82,10 @@ To stop everything but keep Redis/Postgres volumes:
 
 ```bash
 make down-keep
+```
+
+To build both C++ applications directly:
+
+```bash
+make cpp-build
 ```

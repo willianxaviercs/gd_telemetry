@@ -1,0 +1,118 @@
+#include "core/sqlite_device_store.h"
+#include "core/device_event.h"
+
+#include <sqlite3.h>
+
+#include <sstream>
+#include <stdexcept>
+
+void CheckSqlite(int rc, sqlite3* db, const char* context) {
+    if (rc == SQLITE_OK || rc == SQLITE_DONE || rc == SQLITE_ROW) {
+        return;
+    }
+
+    std::ostringstream message;
+    message << context << ": " << sqlite3_errmsg(db);
+    throw std::runtime_error(message.str());
+}
+
+class StatementFinalizer {
+  public:
+    explicit StatementFinalizer(sqlite3_stmt* stmt) : stmt_(stmt) {}
+    ~StatementFinalizer() {
+        if (stmt_ != nullptr) {
+            sqlite3_finalize(stmt_);
+        }
+    }
+
+  private:
+    sqlite3_stmt* stmt_;
+};
+
+SqliteDeviceStore::SqliteDeviceStore(const std::filesystem::path& db_path) : db_(nullptr) {
+    if (sqlite3_open(db_path.string().c_str(), &db_) != SQLITE_OK) {
+        throw std::runtime_error("open sqlite database: " + db_path.string());
+    }
+
+    try {
+        CheckSqlite(sqlite3_busy_timeout(db_, 1000), db_, "set busy timeout");
+        CheckSqlite(
+            sqlite3_exec(db_, "PRAGMA journal_mode = WAL", nullptr, nullptr, nullptr),
+            db_,
+            "enable WAL mode");
+    } catch (...) {
+        sqlite3_close(db_);
+        db_ = nullptr;
+        throw;
+    }
+}
+
+SqliteDeviceStore::~SqliteDeviceStore() {
+    if (db_ != nullptr) {
+        sqlite3_close(db_);
+    }
+}
+
+std::int64_t SqliteDeviceStore::ReadLastPublishedId() {
+    sqlite3_stmt* stmt = nullptr;
+    const char* sql = "SELECT last_published_id FROM collector_state WHERE id = 1";
+
+    CheckSqlite(sqlite3_prepare_v2(db_, sql, -1, &stmt, nullptr), db_, "prepare state query");
+    StatementFinalizer stmt_finalizer(stmt);
+
+    if (sqlite3_step(stmt) != SQLITE_ROW) {
+        throw std::runtime_error("collector_state row is missing");
+    }
+
+    return sqlite3_column_int64(stmt, 0);
+}
+
+std::optional<DeviceEvent> SqliteDeviceStore::ReadNextEvent(std::int64_t last_published_id) {
+    sqlite3_stmt* stmt = nullptr;
+    const char* sql =
+        "SELECT id, device_id, timestamp_unix_ms, type, temperature_celsius, status "
+        "FROM device_events "
+        "WHERE id > ? "
+        "ORDER BY id ASC "
+        "LIMIT 1";
+
+    CheckSqlite(sqlite3_prepare_v2(db_, sql, -1, &stmt, nullptr), db_, "prepare event query");
+    StatementFinalizer stmt_finalizer(stmt);
+
+    CheckSqlite(sqlite3_bind_int64(stmt, 1, last_published_id), db_, "bind event query");
+
+    const int rc = sqlite3_step(stmt);
+    if (rc == SQLITE_DONE) {
+        return std::nullopt;
+    }
+
+    CheckSqlite(rc, db_, "step event query");
+
+    DeviceEvent event = {};
+    event.id = sqlite3_column_int64(stmt, 0);
+    event.device_id = sqlite3_column_int64(stmt, 1);
+    event.timestamp = sqlite3_column_int64(stmt, 2);
+    event.type = static_cast<EventType>(sqlite3_column_int(stmt, 3));
+
+    if (sqlite3_column_type(stmt, 4) != SQLITE_NULL) {
+        event.temperature_celsius = sqlite3_column_double(stmt, 4);
+    }
+
+    if (sqlite3_column_type(stmt, 5) != SQLITE_NULL) {
+        event.device_status = static_cast<DeviceStatus>(sqlite3_column_int(stmt, 5));
+    }
+
+    return event;
+}
+
+void SqliteDeviceStore::UpdateLastPublishedId(std::int64_t last_published_id) {
+    sqlite3_stmt* stmt = nullptr;
+    const char* sql = "UPDATE collector_state SET last_published_id = ? WHERE id = 1";
+
+    CheckSqlite(sqlite3_prepare_v2(db_, sql, -1, &stmt, nullptr), db_, "prepare state update");
+    StatementFinalizer stmt_finalizer(stmt);
+
+    CheckSqlite(sqlite3_bind_int64(stmt, 1, last_published_id), db_, "bind state update");
+    CheckSqlite(sqlite3_step(stmt), db_, "step state update");
+}
+
