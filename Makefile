@@ -3,7 +3,7 @@
 
 SHELL := /bin/bash
 COMPOSE := docker compose -f platform/docker/docker-compose.yml
-RUNTIME_BIN := ./platform/runtime/bin
+RUNTIME_BIN := ./platform/runtime/tools
 BUILD_PATH := build
 
 help:
@@ -16,15 +16,14 @@ help:
 build:
 	cmake -S . -B $(BUILD_PATH)
 	cmake --build $(BUILD_PATH)
+	docker build -t device-sim -f platform/runtime/Dockerfile .
 
 run: build
 	$(COMPOSE) up -d --wait redis postgres
-	$(RUNTIME_BIN)/prepare.sh
-	$(RUNTIME_BIN)/start.sh
+	$(RUNTIME_BIN)/run.sh
 
 stop:
 	$(RUNTIME_BIN)/stop.sh
-	$(RUNTIME_BIN)/clean.sh
 	$(COMPOSE) down -v
 
 clean:

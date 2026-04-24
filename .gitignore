@@ -1,10 +1,8 @@
 design-doc.md
 .codex
-simulator.db
 *.db
 
 build/
-edge-daemon/build/
 cmake-build-*/
 CMakeFiles/
 CMakeCache.txt
@@ -15,7 +13,3 @@ compile_commands.json
 node_modules/
 __pycache__/
 
-runtime/devices/*
-!runtime/devices/.gitkeep
-runtime/run/*
-!runtime/run/.gitkeep

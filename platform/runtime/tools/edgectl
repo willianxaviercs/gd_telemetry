@@ -1,0 +1,97 @@
+#!/bin/python3
+
+import sys
+import json
+import subprocess
+from pathlib import Path
+
+def load_json(path):
+    with open(path, 'r') as file:
+        return json.load(file)
+
+def usage():
+    print(f"{sys.argv[0]} create|start|stop|delete <device_id>")
+    exit()
+
+def save_json(path, data):
+    with open(path, "w") as f:
+        json.dump(data, f, indent=4)
+
+def run(cmd):
+    return subprocess.run(cmd, capture_output=True, text=True)
+
+def device_create(devices, id):
+    if id in devices:
+        print("device alraedy exists")
+        return
+
+    devices[id] = "created"
+
+def device_start(devices, id, config):
+    if id not in devices:
+        print("device does not exist")
+        return
+    
+    if devices[id] == "running":
+        print("device is running")
+        return
+
+    r = run([
+        "docker", "run", "-d",
+        "--name", f"device-{id}",
+        "--network", config["network"],
+        "-e", f"INTERVAL_SECONDS={config['sim_interval_secs']}",
+        "-e", f"POLL_INTERVAL_SECS={config['poll_interval_secs']}",
+        "-e", f"DEVICE_ID={id}",
+        "-e", f"REDIS_HOST={config['redis_host']}",
+        "-e", f"REDIS_PORT={config['redis_port']}",
+        "-e", f"REDIS_STREAM={config['redis_stream']}",
+        "device-sim"
+    ])
+
+    print(r)
+
+    devices[id] = "running"
+
+def device_stop(devices, id):
+    r = run(["docker", "stop", f"device-{id}"])
+    devices[id] = "stopped"
+
+def device_delete(devices, id):
+    if devices[id] == "running":
+        print("cant delete a running device")
+        return
+
+    run(["docker", "rm", f"device-{id}"])
+    
+    del devices[id]
+
+def main():
+    if len(sys.argv) < 3:
+        usage()
+
+    BASE_DIR = Path(__file__).resolve().parent
+
+    config_path  = BASE_DIR / "../topology/device_config.json"
+    devices_path = BASE_DIR / "../topology/devices.json"
+    config  = load_json(config_path)
+    devices = load_json(devices_path)
+    cmd     = sys.argv[1]
+    id      = sys.argv[2]
+
+    if cmd == "create":
+        device_create(devices, id)        
+    elif cmd == "delete":
+        device_delete(devices, id)
+    elif cmd == "start":
+        device_start(devices, id, config)
+    elif cmd == "stop":
+        device_stop(devices, id)
+    else:
+        usage()
+
+    save_json(devices_path, devices)
+
+if __name__ == "__main__":
+    main()
+

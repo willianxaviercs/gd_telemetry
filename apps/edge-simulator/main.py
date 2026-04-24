@@ -16,13 +16,8 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Write random device events into SQLite.")
     parser.add_argument("--device-id", type=int, required=True)
     parser.add_argument("--interval-seconds", type=float, required=True)
+    parser.add_argument("--db-path", type=Path, required=True)
     return parser.parse_args()
-
-
-def db_path_for_device(device_id: int) -> Path:
-    repo_root = Path(__file__).resolve().parent.parent
-    return repo_root / "runtime" / "devices" / str(device_id) / "device.db"
-
 
 def insert_random_event(connection: sqlite3.Connection, device_id: int) -> tuple[int, int]:
     timestamp_unix_ms = int(time.time() * 1000)
@@ -71,15 +66,14 @@ def insert_random_event(connection: sqlite3.Connection, device_id: int) -> tuple
 
 def main() -> None:
     args = parse_args()
-    db_path = db_path_for_device(args.device_id)
 
-    if not db_path.exists():
-        raise SystemExit(f"missing sqlite database: {db_path}")
+    if not args.db_path.exists():
+        raise SystemExit(f"missing sqlite database: {args.db_path}")
 
-    connection = sqlite3.connect(db_path)
+    connection = sqlite3.connect(args.db_path)
     connection.execute("PRAGMA journal_mode = WAL")
 
-    print(f"simulator: device_id={args.device_id} db_path={db_path}")
+    print(f"simulator: device_id={args.device_id} db_path={args.db_path}")
 
     try:
         while True:
