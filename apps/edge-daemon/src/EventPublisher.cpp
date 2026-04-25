@@ -1,36 +1,68 @@
 #include "EventPublisher.h"
 
+#include <cstdint>
+#include <stdexcept>
 #include <vector>
+
+#include "proto/device_event.pb.h"
 #include <sw/redis++/redis.h>
 
 namespace {
 
-std::string EventTypeValue(const DeviceEvent& event)
+struct ParsedDeviceEvent
 {
-    return std::to_string(static_cast<int>(event.type));
+    std::uint64_t event_id = 0;
+    std::uint64_t device_id = 0;
+    std::uint64_t timestamp_unix_ms = 0;
+    std::uint64_t type = 0;
+    std::uint64_t payload_version = 0;
+};
+
+ParsedDeviceEvent ParseAndValidateDeviceEventBlob(const std::string& blob)
+{
+    gundam::v1::DeviceEvent event;
+    if (!event.ParseFromString(blob))
+    {
+        throw std::runtime_error("invalid protobuf payload in event_blob");
+    }
+
+    if (event.payload_case() == gundam::v1::DeviceEvent::PAYLOAD_NOT_SET)
+    {
+        throw std::runtime_error("event_blob has no payload oneof field");
+    }
+
+    if (event.type() == gundam::v1::UNSPECIFIED)
+    {
+        throw std::runtime_error("event_blob has unspecified type");
+    }
+
+    return ParsedDeviceEvent{
+        static_cast<std::uint64_t>(event.event_id()),
+        static_cast<std::uint64_t>(event.device_id()),
+        static_cast<std::uint64_t>(event.timestamp_unix_ms()),
+        static_cast<std::uint64_t>(event.type()),
+        static_cast<std::uint64_t>(event.payload_version()),
+    };
 }
 
 void PublishDeviceEvent(
     sw::redis::Redis& redis,
     const char*       stream,
-    const DeviceEvent& event)
+    const DeviceEvent& row_event)
 {
+    const auto parsed = ParseAndValidateDeviceEventBlob(row_event.encoded_event_blob);
+
     using Field = std::pair<std::string, std::string>;
     std::vector<Field> fields;
-    fields.reserve(6);
-    fields.emplace_back("event_id", std::to_string(event.id));
-    fields.emplace_back("device_id", std::to_string(event.device_id));
-    fields.emplace_back("timestamp_unix_ms", std::to_string(event.timestamp));
-    fields.emplace_back("type", EventTypeValue(event));
-
-    if (event.type == EventType::TemperatureReading)
-    {
-        fields.emplace_back("temperature_celsius", std::to_string(event.temperature_celsius));
-    }
-    else if (event.type == EventType::StatusUpdate)
-    {
-        fields.emplace_back("status", std::to_string(static_cast<int>(event.device_status)));
-    }
+    fields.reserve(8);
+    fields.emplace_back("row_id", std::to_string(row_event.id));
+    fields.emplace_back("event_id", std::to_string(parsed.event_id));
+    fields.emplace_back("device_id", std::to_string(parsed.device_id));
+    fields.emplace_back("timestamp_unix_ms", std::to_string(parsed.timestamp_unix_ms));
+    fields.emplace_back("type", std::to_string(parsed.type));
+    fields.emplace_back("payload_version", std::to_string(parsed.payload_version));
+    fields.emplace_back("payload_format", "protobuf");
+    fields.emplace_back("event_proto", row_event.encoded_event_blob);
 
     redis.xadd(stream, "*", fields.begin(), fields.end());
 }

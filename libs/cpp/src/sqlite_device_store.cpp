@@ -70,7 +70,7 @@ std::int64_t SqliteDeviceStore::ReadLastPublishedId() {
 std::optional<DeviceEvent> SqliteDeviceStore::ReadNextEvent(std::int64_t last_published_id) {
     sqlite3_stmt* stmt = nullptr;
     const char* sql =
-        "SELECT id, device_id, timestamp_unix_ms, type, temperature_celsius, status "
+        "SELECT id, event_blob "
         "FROM device_events "
         "WHERE id > ? "
         "ORDER BY id ASC "
@@ -90,17 +90,17 @@ std::optional<DeviceEvent> SqliteDeviceStore::ReadNextEvent(std::int64_t last_pu
 
     DeviceEvent event = {};
     event.id = sqlite3_column_int64(stmt, 0);
-    event.device_id = sqlite3_column_int64(stmt, 1);
-    event.timestamp = sqlite3_column_int64(stmt, 2);
-    event.type = static_cast<EventType>(sqlite3_column_int(stmt, 3));
 
-    if (sqlite3_column_type(stmt, 4) != SQLITE_NULL) {
-        event.temperature_celsius = sqlite3_column_double(stmt, 4);
+    if (sqlite3_column_type(stmt, 1) != SQLITE_BLOB) {
+        throw std::runtime_error("device_events.event_blob must be a BLOB");
     }
 
-    if (sqlite3_column_type(stmt, 5) != SQLITE_NULL) {
-        event.device_status = static_cast<DeviceStatus>(sqlite3_column_int(stmt, 5));
+    const auto* blob_data = static_cast<const char*>(sqlite3_column_blob(stmt, 1));
+    const int blob_size = sqlite3_column_bytes(stmt, 1);
+    if (blob_data == nullptr || blob_size <= 0) {
+        throw std::runtime_error("device_events.event_blob is empty");
     }
+    event.encoded_event_blob.assign(blob_data, static_cast<std::size_t>(blob_size));
 
     return event;
 }

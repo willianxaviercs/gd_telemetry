@@ -1,0 +1,10 @@
+{
+  "name": "telemetry",
+  "version": "0.1.0",
+  "dependencies": [
+    "protobuf",
+    "hiredis",
+    "redis-plus-plus",
+    "sqlite3"
+  ]
+}

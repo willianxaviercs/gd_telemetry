@@ -14,8 +14,11 @@ help:
 	@printf "  %-10s %s\n" "stop"  "Stop development environment"
 
 build:
-	cmake -S . -B $(BUILD_PATH)
+	cmake -B $(BUILD_PATH) \
+  		-DCMAKE_TOOLCHAIN_FILE=~/vcpkg/scripts/buildsystems/vcpkg.cmake \
+  		-DVCPKG_TARGET_TRIPLET=x64-linux
 	cmake --build $(BUILD_PATH)
+
 	docker build -t device-sim -f platform/runtime/Dockerfile .
 
 run: build
@@ -25,6 +28,4 @@ run: build
 stop:
 	$(RUNTIME_BIN)/stop.sh
 	$(COMPOSE) down -v
-
-clean:
 

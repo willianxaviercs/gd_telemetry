@@ -4,23 +4,45 @@ package gundam.v1;
 
 enum EventType {
   UNSPECIFIED = 0;
-  TEMPERATURE_READING = 1;
-  STATUS_UPDATE = 2;
+  POSITION_SAMPLE = 1;
+  HEALTH_SAMPLE = 2;
+  MISSION_UPDATE = 3;
 }
 
-enum DeviceStatus {
-  STATUS_UNSPECIFIED = 0;
-  ONLINE = 1;
-  OFFLINE = 2;
-  ERROR = 3;
+enum MissionState {
+  MISSION_STATE_UNSPECIFIED = 0;
+  IDLE = 1;
+  TAKEOFF = 2;
+  PATROL = 3;
+  RETURN_TO_HOME = 4;
+  LANDED = 5;
 }
 
-message TemperatureReading {
-  double celsius = 1;
+enum MissionReason {
+  MISSION_REASON_UNSPECIFIED = 0;
+  STARTUP = 1;
+  PATROL_STARTED = 2;
+  LOW_BATTERY = 3;
+  MANUAL_OVERRIDE = 4;
 }
 
-message StatusUpdate {
-  DeviceStatus status = 1;
+message PositionSample {
+  double latitude_deg = 1;
+  double longitude_deg = 2;
+  double altitude_m = 3;
+  double heading_deg = 4;
+  double speed_mps = 5;
+}
+
+message HealthSample {
+  uint32 battery_pct = 1;
+  uint32 link_quality_pct = 2;
+  uint32 gps_fix_type = 3;
+}
+
+message MissionUpdate {
+  MissionState state = 1;
+  MissionReason reason = 2;
 }
 
 message DeviceEvent {
@@ -28,9 +50,11 @@ message DeviceEvent {
   uint64 device_id = 2;
   uint64 timestamp_unix_ms = 3;
   EventType type = 4;
+  uint32 payload_version = 5;
 
   oneof payload {
-    TemperatureReading temperature_reading = 5;
-    StatusUpdate status_update = 6;
+    PositionSample position_sample = 10;
+    HealthSample health_sample = 11;
+    MissionUpdate mission_update = 12;
   }
 }

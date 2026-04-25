@@ -5,10 +5,10 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-## libraries
+# libraries
 add_subdirectory(libs/cpp)
 
-## applications
+# applications
 add_subdirectory(apps/edge-daemon)
 add_subdirectory(apps/stream-consumer)
 
