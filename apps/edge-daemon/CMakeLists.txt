@@ -4,7 +4,7 @@ add_executable(edge-daemon
     src/EventPublisher.cpp
 )
 
-target_link_libraries(edge-daemon PRIVATE core)
+target_link_libraries(edge-daemon PRIVATE core redisplusplus hiredis)
 
 target_link_options(edge-daemon PRIVATE -static)
 

@@ -5,8 +5,9 @@
 #include <string>
 #include <thread>
 
-#include "core/redis_stream_publisher.h"
 #include "core/sqlite_device_store.h"
+
+#include <sw/redis++/redis.h>
 
 #include "Config.h"
 #include "EventPublisher.h"
@@ -32,7 +33,11 @@ int main(int argc, char** argv)
             << " stream=" << config.redis_stream << std::endl;
 
     SqliteDeviceStore store(config.db_path);
-    RedisStreamPublisher redis(config.redis_host, config.redis_port);
+
+    sw::redis::ConnectionOptions redis_opts;
+    redis_opts.host = config.redis_host;
+    redis_opts.port = config.redis_port;
+    sw::redis::Redis redis(redis_opts);
 
     EventPublisher event_publisher(config, store, redis);
     event_publisher.Run();

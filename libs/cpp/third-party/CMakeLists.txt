@@ -14,3 +14,11 @@ set_target_properties(sqlite3 PROPERTIES
         ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
+add_library(redisplusplus STATIC IMPORTED GLOBAL)
+set_target_properties(redisplusplus PROPERTIES
+    IMPORTED_LOCATION
+        ${CMAKE_CURRENT_SOURCE_DIR}/redis++/libredis++.a
+    INTERFACE_INCLUDE_DIRECTORIES
+        ${CMAKE_CURRENT_SOURCE_DIR}/redis++/include
+)
+
