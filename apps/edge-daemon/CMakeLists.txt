@@ -1,4 +1,8 @@
-add_executable(edge-daemon src/main.cpp)
+add_executable(edge-daemon
+    src/main.cpp
+    src/Config.cpp
+    src/EventPublisher.cpp
+)
 
 target_link_libraries(edge-daemon PRIVATE core)
 
