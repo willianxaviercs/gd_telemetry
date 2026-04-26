@@ -46,7 +46,7 @@ def device_start(devices, id, config):
         "-e", f"REDIS_HOST={config['redis_host']}",
         "-e", f"REDIS_PORT={config['redis_port']}",
         "-e", f"REDIS_STREAM={config['redis_stream']}",
-        "device-sim"
+        "telemetry/device-sim:latest"
     ])
 
     print(r)

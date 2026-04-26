@@ -2,9 +2,10 @@
 .DEFAULT_GOAL := help
 
 SHELL := /bin/bash
-COMPOSE := docker compose -f platform/docker/docker-compose.yml
+COMPOSE := docker compose --env-file .env -f platform/docker/backend/docker-compose.yml
 RUNTIME_BIN := ./platform/runtime/tools
 BUILD_PATH := build
+PROJECT_NAME := telemetry
 
 help:
 	@printf "Project development workflow\n\n"
@@ -19,13 +20,22 @@ build:
   		-DVCPKG_TARGET_TRIPLET=x64-linux
 	cmake --build $(BUILD_PATH)
 
-	docker build -t device-sim -f platform/runtime/Dockerfile .
+	docker build -t $(PROJECT_NAME)/postgres:latest \
+		-f platform/docker/postgres/Dockerfile .
 
-run: build
-	$(COMPOSE) up -d --wait redis postgres
+	docker build -t $(PROJECT_NAME)/device-sim:latest \
+		-f platform/docker/edge-device/Dockerfile .
+
+	docker build -t $(PROJECT_NAME)/stream-consumer:latest \
+		-f platform/docker/stream-consumer/Dockerfile .
+
+run: build check-env
+	$(COMPOSE) up -d --wait redis postgres stream-consumer
 	$(RUNTIME_BIN)/run.sh
+
+check-env:
+	@test -f .env || (echo ".env file missing - aborting build" && exit 1)
 
 stop:
 	$(RUNTIME_BIN)/stop.sh
 	$(COMPOSE) down -v
-

@@ -1,6 +1,7 @@
 design-doc.md
 .codex
 *.db
+.env
 
 build/
 cmake-build-*/
