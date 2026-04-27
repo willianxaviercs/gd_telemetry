@@ -10,6 +10,13 @@
 
 using namespace sw::redis;
 
+using Field = std::pair<std::string, std::string>;
+using Fields = std::vector<Field>;
+using StreamEntry = std::pair<std::string, Fields>;
+using ItemStream  = std::vector<StreamEntry>;
+using RedisStreamResult = std::unordered_map<std::string, ItemStream>;
+
+// TODO: pull it to separate file
 class Storage
 {
     const std::string conn_str_;
@@ -24,10 +31,12 @@ public:
     {
         EnsureConnection();
 
+        std::string data = e.SerializeAsString();
+
         pqxx::work tx(conn_);
         tx.exec(
-            "INSERT INTO hello_world (message) VALUES ($1)",
-            pqxx::params{"hello from consumer"}
+            "INSERT INTO device_events (event_blob) VALUES ($1)",
+            pqxx::binary_cast(data)
         );
         tx.commit();
     }
@@ -43,89 +52,34 @@ private:
     }
 };
 
-// ---------- Debug print ----------
-void DebugPrintEvent(const gundam::v1::DeviceEvent& e)
+int main(void)
 {
-    std::cout
-        << "event_id:  " << e.event_id() << " "
-        << "device_id: " << e.device_id() << " "
-        << "timestamp: " << e.timestamp_unix_ms() << " "
-        << "type:      " << e.type() << " "
-        << "payload_v: " << e.payload_version()
-        << std::endl;
-
-    switch (e.payload_case())
+    try
     {
-        case gundam::v1::DeviceEvent::kMissionUpdate:
-        {
-            const auto& m = e.mission_update();
-            std::cout
-                << "mission_state: " << m.state() << "\n"
-                << "reason:        " << m.reason() << "\n"
-                << std::endl;
-            break;
-        }
+        // postgres setup
+        auto config_pq    = LoadPostgresConfig();
+        auto conn_str = std::format(
+            "host={} port={} dbname={} user={} password={}",
+            config_pq.host, config_pq.port, config_pq.db, config_pq.user, config_pq.password
+        );
+        Storage storage(conn_str);
 
-        case gundam::v1::DeviceEvent::kPositionSample:
-        {
-            const auto& m = e.position_sample();
-            std::cout
-                << "latitude_deg:  " << m.latitude_deg() << "\n"
-                << "longitude_deg: " << m.longitude_deg() << "\n"
-                << "altitude_m:    " << m.altitude_m() << "\n"
-                << "heading_deg:   " << m.heading_deg() << "\n"
-                << "speed_mps:     " << m.speed_mps() << "\n"
-                << std::endl;
-            break;
-        }
-
-        case gundam::v1::DeviceEvent::kHealthSample:
-        {
-            const auto& m = e.health_sample();
-            std::cout
-                << "battery_pct:      " << m.battery_pct() << "\n"
-                << "link_quality_pct: " << m.link_quality_pct() << "\n"
-                << "gps_fix_type:     " << m.gps_fix_type() << "\n"
-                << std::endl;
-            break;
-        }
-
-        default:
-            break;
-    }
-}
-
-int main()
-{
-    auto config_pq    = LoadPostgresConfig();
-    auto conn_str = std::format(
-        "host={} port={} dbname={} user={} password={}",
-        config_pq.host, config_pq.port, config_pq.db, config_pq.user, config_pq.password
-    );
-
-    auto config_redis = LoadRedisConfig();
-    auto redis_uri = std::format("tcp://{}:{}", config_redis.host, config_redis.port);
-
-    Redis redis(redis_uri);    
-    Storage storage(conn_str);
-
-    try {
+        // redis setup
+        auto config_redis = LoadRedisConfig();
+        auto redis_uri = std::format("tcp://{}:{}", config_redis.host, config_redis.port);
+        Redis redis(redis_uri);    
         redis.xgroup_create(config_redis.stream, config_redis.group, "$", true);
-    } catch (...) {}
+    }
+    catch (const std::exception& e)
+    {
+        std::cerr << "error: " << e.what() << std::endl;
+    }
 
-    // ---------- CORRECT TYPE ----------
-    using Field = std::pair<std::string, std::string>;
-    using Fields = std::vector<Field>;
-
-    using StreamEntry = std::pair<std::string, Fields>;
-    using ItemStream  = std::vector<StreamEntry>;
-
-    using Result = std::unordered_map<std::string, ItemStream>;
-
-    Result result;
-
-    // ---------- LOOP ----------
-    while (true)
+    // TODO: pull this to an class
+    // StreamConsumer consumer(redis, storare);
+    // consumer.run();
+    RedisStreamResult result;
+    for (;;)
     {
         try
         {
@@ -156,7 +110,7 @@ int main()
                     gundam::v1::DeviceEvent msg;
                     msg.ParseFromString(payload);
 
-                    DebugPrintEvent(msg);
+                    std::cout << msg.DebugString() << std::endl;
                     storage.InsertEvent(msg);
 
                     redis.xack(config_redis.stream, config_redis.group, entry.first);

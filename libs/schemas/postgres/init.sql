@@ -1,5 +1,6 @@
-CREATE TABLE IF NOT EXISTS hello_world (
-    id SERIAL PRIMARY KEY,
-    message TEXT NOT NULL,
-    created_at TIMESTAMP DEFAULT NOW()
+CREATE TABLE IF NOT EXISTS device_events (
+    id BIGSERIAL PRIMARY KEY,
+    event_blob BYTEA NOT NULL,
+    CHECK (length(event_blob) > 0)
 );
+
