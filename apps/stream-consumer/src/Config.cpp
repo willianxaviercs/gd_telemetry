@@ -1,47 +1,44 @@
+#include "Config.h"
+
 #include <cstdlib>
 #include <stdexcept>
 
-struct RedisConfig
+ConsumerConfig
+LoadConsumerConfig(void)
 {
-    const char* host;
-    const char* stream;
-    const char* group;
-    const char* consumer;
-    int port;
-};
+    ConsumerConfig cfg{};
 
-RedisConfig LoadRedisConfig(void)
+    cfg.stream = std::getenv("REDIS_STREAM");
+    cfg.group  = std::getenv("REDIS_GROUP");
+    cfg.name   = std::getenv("REDIS_CONSUMER");
+
+    if (!cfg.stream || !cfg.group || !cfg.name)
+        throw std::runtime_error("Missing consumer env vars");
+
+    return cfg;
+}
+
+RedisConfig
+LoadRedisConfig(void)
 {
     RedisConfig cfg{};
 
-    cfg.host     = std::getenv("REDIS_HOST");
-    cfg.stream   = std::getenv("REDIS_STREAM");
-    cfg.group    = std::getenv("REDIS_GROUP");
-    cfg.consumer = std::getenv("REDIS_CONSUMER");
-
+    cfg.host         = std::getenv("REDIS_HOST");
     const char* port = std::getenv("REDIS_PORT");
 
-    if (!cfg.host || !cfg.stream || !cfg.group || !cfg.consumer || !port)
+    if (!cfg.host || !port)
         throw std::runtime_error("Missing Redis env vars");
 
     cfg.port = std::atoi(port);
 
-    if (cfg.port <= 0)
+    if (cfg.port <= 0 || cfg.port > 65535)
         throw std::runtime_error("Invalid REDIS_PORT");
 
     return cfg;
 }
 
-struct PostgresConfig
-{
-    const char* host;
-    const char* db;
-    const char* user;
-    const char* password;
-    int port;
-};
-
-PostgresConfig LoadPostgresConfig(void)
+PostgresConfig
+LoadPostgresConfig(void)
 {
     PostgresConfig cfg{};
 
@@ -62,3 +59,4 @@ PostgresConfig LoadPostgresConfig(void)
 
     return cfg;
 }
+

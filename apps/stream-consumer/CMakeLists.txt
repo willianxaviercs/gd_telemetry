@@ -1,4 +1,7 @@
 add_executable(stream-consumer 
+    src/Config.cpp
+    src/StreamConsumer.cpp
+    src/Storage.cpp
     src/main.cpp
 )
 
