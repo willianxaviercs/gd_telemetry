@@ -1,3 +1,9 @@
+#include "core/sqlite_device_store.h"
+#include <sw/redis++/redis.h>
+
+#include "Config.h"
+#include "EventPublisher.h"
+
 #include <chrono>
 #include <cstdlib>
 #include <filesystem>
@@ -5,12 +11,7 @@
 #include <string>
 #include <thread>
 
-#include "core/sqlite_device_store.h"
-
-#include <sw/redis++/redis.h>
-
-#include "Config.h"
-#include "EventPublisher.h"
+using namespace sw::redis;
 
 int main(int argc, char** argv)
 {
@@ -34,13 +35,14 @@ int main(int argc, char** argv)
 
     SqliteDeviceStore store(config.db_path);
 
-    sw::redis::ConnectionOptions redis_opts;
+    ConnectionOptions redis_opts;
     redis_opts.host = config.redis_host;
     redis_opts.port = config.redis_port;
-    sw::redis::Redis redis(redis_opts);
+    Redis redis(redis_opts);
 
-    EventPublisher event_publisher(config, store, redis);
-    event_publisher.Run();
+    EventPublisher publisher(config, store, redis);
+    publisher.Run();
 
     return 0;
 }
+

@@ -1,13 +1,15 @@
-#include <iostream>
-#include <format>
-
-#include <sw/redis++/redis++.h>
-#include <pqxx/pqxx>
-
 #include "StreamConsumer.h"
 #include "Storage.h"
 #include "proto/device_event.pb.h"
 #include "Config.h"
+
+#include <sw/redis++/redis++.h>
+#include <pqxx/pqxx>
+
+#include <iostream>
+#include <format>
+
+using namespace sw::redis;
 
 int main(void)
 {
@@ -23,9 +25,10 @@ int main(void)
 
         // redis
         auto redis_config = LoadRedisConfig();
-        auto redis_uri = std::format("tcp://{}:{}", redis_config.host, redis_config.port);
-
-        sw::redis::Redis redis(redis_uri);
+        ConnectionOptions redis_opts;
+        redis_opts.host = redis_config.host;
+        redis_opts.port = redis_config.port;
+        sw::redis::Redis redis(redis_opts);
 
         // consumer
         auto consumer_config = LoadConsumerConfig();

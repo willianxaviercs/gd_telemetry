@@ -1,8 +1,9 @@
 #pragma once
 
-#include <sw/redis++/redis++.h>
 #include "Storage.h"
 #include "Config.h"
+
+#include <sw/redis++/redis++.h>
 
 using Field = std::pair<std::string, std::string>;
 using Fields = std::vector<Field>;
@@ -20,3 +21,4 @@ public:
 
     void Run(void) const;
 };
+

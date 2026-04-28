@@ -3,11 +3,9 @@
 Storage::Storage(const std::string& conn_str)
         : conn_str_(conn_str)
         , conn_(conn_str)
-{
-}
+{}
 
-void
-Storage::InsertEvent(const gundam::v1::DeviceEvent& e)
+void Storage::InsertEvent(const gundam::v1::DeviceEvent& e)
 {
     EnsureConnection();
 
@@ -21,8 +19,7 @@ Storage::InsertEvent(const gundam::v1::DeviceEvent& e)
     tx.commit();
 }
 
-void
-Storage::EnsureConnection(void)
+void Storage::EnsureConnection(void)
 {
     if (conn_.is_open())
         return;

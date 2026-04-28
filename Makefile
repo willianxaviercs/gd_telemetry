@@ -39,3 +39,4 @@ check-env:
 stop:
 	$(RUNTIME_BIN)/stop.sh
 	$(COMPOSE) down -v
+

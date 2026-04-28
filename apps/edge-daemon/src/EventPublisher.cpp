@@ -17,8 +17,7 @@ EventPublisher::EventPublisher(
       redis_(redis)
 {}
 
-void
-EventPublisher::Run()
+void EventPublisher::Run()
 {
     for (;;)
     {

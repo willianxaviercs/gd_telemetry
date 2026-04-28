@@ -1,7 +1,8 @@
-#include <iostream>
-#include <format>
 #include "Config.h"
 #include "StreamConsumer.h"
+
+#include <iostream>
+#include <format>
 
 StreamConsumer::StreamConsumer(
         ConsumerConfig& config,
@@ -11,11 +12,9 @@ StreamConsumer::StreamConsumer(
         config_(config)
       , redis_(redis)
       , storage_(storage)
-{
-}
+{}
 
-void
-StreamConsumer::Run(void) const
+void StreamConsumer::Run(void) const
 {
     // create consumer group if it not exist
     try

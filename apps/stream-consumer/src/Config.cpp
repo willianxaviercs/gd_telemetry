@@ -3,8 +3,7 @@
 #include <cstdlib>
 #include <stdexcept>
 
-ConsumerConfig
-LoadConsumerConfig(void)
+ConsumerConfig LoadConsumerConfig(void)
 {
     ConsumerConfig cfg{};
 
@@ -18,8 +17,7 @@ LoadConsumerConfig(void)
     return cfg;
 }
 
-RedisConfig
-LoadRedisConfig(void)
+RedisConfig LoadRedisConfig(void)
 {
     RedisConfig cfg{};
 
@@ -37,8 +35,7 @@ LoadRedisConfig(void)
     return cfg;
 }
 
-PostgresConfig
-LoadPostgresConfig(void)
+PostgresConfig LoadPostgresConfig(void)
 {
     PostgresConfig cfg{};
 

@@ -79,3 +79,4 @@ bool ParseArgs(int argc, char** argv, Config& config)
 
     return true;
 }
+

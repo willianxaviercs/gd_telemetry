@@ -1,9 +1,10 @@
 #pragma once
 
-#include <iostream>
-#include <string>
 #include <pqxx/pqxx>
 #include "proto/device_event.pb.h"
+
+#include <iostream>
+#include <string>
 
 class Storage
 {

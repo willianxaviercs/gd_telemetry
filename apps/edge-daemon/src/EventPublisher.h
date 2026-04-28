@@ -21,3 +21,4 @@ public:
     EventPublisher(Config& config, SqliteDeviceStore& storage, sw::redis::Redis& redis);
     void Run();
 };
+
