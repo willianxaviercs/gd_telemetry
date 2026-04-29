@@ -1,10 +1,12 @@
 #pragma once
 
 #include <pqxx/pqxx>
-#include "proto/device_event.pb.h"
+#include "proto/payload.pb.h"
 
 #include <iostream>
 #include <string>
+
+using namespace proto::v1;
 
 class Storage
 {
@@ -13,7 +15,11 @@ class Storage
 public:
     Storage(const std::string& conn_str);
 
-    void InsertEvent(const gundam::v1::DeviceEvent& e);
+    void InsertEvent(
+            const Payload& p,
+            const std::string& device_id,
+            const std::string& timestamp,
+            const std::string& type);
 
 private:
     void EnsureConnection(void);

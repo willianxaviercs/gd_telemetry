@@ -1,12 +1,13 @@
-#include "proto/device_event.pb.h"
-#include <sw/redis++/redis.h>
+#include "proto/payload.pb.h"
 #include "EventPublisher.h"
+
+#include <sw/redis++/redis.h>
 
 #include <cstdint>
 #include <stdexcept>
 #include <vector>
 
-using namespace gundam::v1;
+using namespace proto::v1;
 
 EventPublisher::EventPublisher(
     Config& config,
@@ -33,17 +34,22 @@ void EventPublisher::Run()
                 continue;
             }
             
-            gundam::v1::DeviceEvent msg;
-            // validade blob
-            if (!msg.ParseFromString(row->encoded_event_blob))
+            Payload p;
+            if (!p.ParseFromString(row->payload))
                 std::cerr << "[ERR] :: EventPublisher :: Could not parse event id: " << row->id << "\n";    
             
-            std::cout << msg.DebugString() << std::endl;
+            std::cout << p.DebugString() << std::endl;
 
-            auto blob = msg.SerializeAsString();
-            auto data = std::make_pair(std::string("data"), blob); 
+            auto blob = p.SerializeAsString();
 
-            redis_.xadd(config_.redis_stream, "*", {data});
+            std::vector<std::pair<std::string, std::string>> data = {
+                { "device_id", std::to_string(row->device_id) },
+                { "timestamp", std::to_string(row->timestamp) },
+                { "type"     , std::to_string(static_cast<int32_t>(row->type)) },
+                { "payload"  , blob },
+            };
+
+            redis_.xadd(config_.redis_stream, "*", data.begin(), data.end());
             storage_.UpdateLastPublishedId(row->id);
         }
         catch (const std::exception& err)

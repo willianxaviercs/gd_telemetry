@@ -1,8 +1,8 @@
 {
-  "name": "gundam-api",
+  "name": "telemetry-api",
   "version": "0.1.0",
   "private": true,
-  "description": "Minimal REST API skeleton for the gundam monorepo",
+  "description": "Minimal REST API skeleton for the telemetry monorepo",
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js"

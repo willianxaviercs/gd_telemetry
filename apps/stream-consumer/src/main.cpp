@@ -1,6 +1,5 @@
 #include "StreamConsumer.h"
 #include "Storage.h"
-#include "proto/device_event.pb.h"
 #include "Config.h"
 
 #include <sw/redis++/redis++.h>

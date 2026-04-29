@@ -7,7 +7,7 @@ RUN mkdir ./gen
 
 COPY build/edge-daemon/edge-daemon ./daemon
 COPY apps/edge-simulator/main.py ./simulator.py
-COPY apps/edge-simulator/gen/device_event_pb2.py ./gen
+COPY apps/edge-simulator/gen/payload_pb.py ./gen
 COPY libs/schemas/sqlite/device_events.sql /tmp/schema.sql
 COPY platform/runtime/tools/start.sh .
 

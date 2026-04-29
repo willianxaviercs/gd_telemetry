@@ -10,16 +10,19 @@ PROJECT_NAME := telemetry
 help:
 	@printf "Project development workflow\n\n"
 	@printf "commands:\n\n"
-	@printf "  %-10s %s\n" "build" "Build entire project"
-	@printf "  %-10s %s\n" "run"   "Run development environment"
-	@printf "  %-10s %s\n" "stop"  "Stop development environment"
+	@printf "  %-10s %s\n" "build-all"     "Build entire project"
+	@printf "  %-10s %s\n" "build-cpp"     "Build cpp apps"
+	@printf "  %-10s %s\n" "build-docker"  "Build docker images"
+	@printf "  %-10s %s\n" "run"           "Run development environment"
+	@printf "  %-10s %s\n" "stop"          "Stop development environment"
 
-build:
+build-cpp:
 	cmake -B $(BUILD_PATH) \
   		-DCMAKE_TOOLCHAIN_FILE=~/vcpkg/scripts/buildsystems/vcpkg.cmake \
   		-DVCPKG_TARGET_TRIPLET=x64-linux
 	cmake --build $(BUILD_PATH)
 
+build-docker:
 	docker build -t $(PROJECT_NAME)/postgres:latest \
 		-f platform/docker/postgres/Dockerfile .
 
@@ -29,7 +32,9 @@ build:
 	docker build -t $(PROJECT_NAME)/stream-consumer:latest \
 		-f platform/docker/stream-consumer/Dockerfile .
 
-run: build check-env
+build-all: build-cpp build-docker
+
+run: check-env
 	$(COMPOSE) up -d --wait redis postgres stream-consumer
 	$(RUNTIME_BIN)/run.sh
 

@@ -1,7 +1,10 @@
 CREATE TABLE IF NOT EXISTS device_events (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    event_blob BLOB NOT NULL,
-    CHECK (length(event_blob) > 0)
+    id        INTEGER PRIMARY KEY AUTOINCREMENT,
+    device_id INTEGER NOT NULL,
+    timestamp INTEGER NOT NULL,
+    type      INTEGER NOT NULL,
+    payload   BLOB    NOT NULL,
+    CHECK (length(payload) > 0)
 );
 
 CREATE TABLE IF NOT EXISTS collector_state (

@@ -6,6 +6,8 @@
 #include <sstream>
 #include <stdexcept>
 
+// TODO(wxr): Refactor into allman braces style
+
 void CheckSqlite(int rc, sqlite3* db, const char* context) {
     if (rc == SQLITE_OK || rc == SQLITE_DONE || rc == SQLITE_ROW) {
         return;
@@ -67,10 +69,11 @@ std::int64_t SqliteDeviceStore::ReadLastPublishedId() {
     return sqlite3_column_int64(stmt, 0);
 }
 
+// TODO: Change this to ReadEvents (batching processing)
 std::optional<DeviceEvent> SqliteDeviceStore::ReadNextEvent(std::int64_t last_published_id) {
     sqlite3_stmt* stmt = nullptr;
     const char* sql =
-        "SELECT id, event_blob "
+        "SELECT id, device_id, timestamp, type, payload "
         "FROM device_events "
         "WHERE id > ? "
         "ORDER BY id ASC "
@@ -89,18 +92,21 @@ std::optional<DeviceEvent> SqliteDeviceStore::ReadNextEvent(std::int64_t last_pu
     CheckSqlite(rc, db_, "step event query");
 
     DeviceEvent event = {};
-    event.id = sqlite3_column_int64(stmt, 0);
+    event.id        = sqlite3_column_int64(stmt, 0);
+    event.device_id = sqlite3_column_int64(stmt, 1);
+    event.timestamp = sqlite3_column_int64(stmt, 2);
+    event.type      = static_cast<EventType>(sqlite3_column_int(stmt, 3));
 
-    if (sqlite3_column_type(stmt, 1) != SQLITE_BLOB) {
-        throw std::runtime_error("device_events.event_blob must be a BLOB");
+    if (sqlite3_column_type(stmt, 4) != SQLITE_BLOB) {
+        throw std::runtime_error("device_events.payload must be a BLOB");
     }
 
-    const auto* blob_data = static_cast<const char*>(sqlite3_column_blob(stmt, 1));
-    const int blob_size = sqlite3_column_bytes(stmt, 1);
+    const char* blob_data = static_cast<const char*>(sqlite3_column_blob(stmt, 4));
+    const int   blob_size = sqlite3_column_bytes(stmt, 4);
     if (blob_data == nullptr || blob_size <= 0) {
         throw std::runtime_error("device_events.event_blob is empty");
     }
-    event.encoded_event_blob.assign(blob_data, static_cast<std::size_t>(blob_size));
+    event.payload.assign(blob_data, static_cast<std::size_t>(blob_size));
 
     return event;
 }

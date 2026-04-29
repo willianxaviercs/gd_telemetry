@@ -19,7 +19,7 @@ target_link_libraries(core
 
 # --- proto ---
 add_library(proto STATIC
-  src/device_event.pb.cc
+  src/payload.pb.cc
 )
 
 target_include_directories(proto

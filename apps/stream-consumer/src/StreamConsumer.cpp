@@ -4,6 +4,8 @@
 #include <iostream>
 #include <format>
 
+using namespace proto::v1;
+
 StreamConsumer::StreamConsumer(
         ConsumerConfig& config,
         sw::redis::Redis& redis,
@@ -49,20 +51,28 @@ void StreamConsumer::Run(void) const
             {
                 for (const auto& entry : entries)
                 {
+                    // TODO(wxr): later we can use stream id for idempotent insert??
                     std::cout << "processing id: " << entry.first << std::endl;
 
                     const auto& fields = entry.second;
 
                     if (fields.empty())
                         continue;
+                    
+                    // TODO(wxr): Can we use type data other than string??
+                    // example:
+                    // fields [{"device_id", "1"}, {"timestamp", "172731231230"}, {"type", "1"}, {"payload", "0xffafbgdc..."}] 
 
-                    const auto& payload = fields.front().second;
+                    const auto& device_id = fields[0].second;
+                    const auto& timestamp = fields[1].second;
+                    const auto& type      = fields[2].second;
+                    const auto& blob      = fields[3].second;
 
-                    gundam::v1::DeviceEvent msg;
-                    msg.ParseFromString(payload);
+                    Payload p;
+                    p.ParseFromString(blob);
 
-                    std::cout << msg.DebugString() << std::endl;
-                    storage_.InsertEvent(msg);
+                    std::cout << p.DebugString() << std::endl;
+                    storage_.InsertEvent(p, device_id, timestamp, type);
 
                     redis_.xack(config_.stream, config_.group, entry.first);
                 }
@@ -70,7 +80,8 @@ void StreamConsumer::Run(void) const
         }
         catch (const std::exception& e)
         {
-            std::cerr << "error: " << e.what() << std::endl;
+            ;
+            //std::cerr << "error: " << e.what() << std::endl;
         }
     }
 }

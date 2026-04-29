@@ -5,16 +5,27 @@ Storage::Storage(const std::string& conn_str)
         , conn_(conn_str)
 {}
 
-void Storage::InsertEvent(const gundam::v1::DeviceEvent& e)
+void Storage::InsertEvent(
+        const Payload& p,
+        const std::string& device_id,
+        const std::string& timestamp,
+        const std::string& type)
 {
     EnsureConnection();
 
-    std::string data = e.SerializeAsString();
+    std::string payload = p.SerializeAsString();
 
     pqxx::work tx(conn_);
     tx.exec(
-        "INSERT INTO device_events (event_blob) VALUES ($1)",
-        pqxx::binary_cast(data)
+        "INSERT INTO device_events "
+        "(device_id, timestamp, type, payload) "
+        "VALUES ($1, $2, $3, $4)",
+        pqxx::params(
+            std::stoll(device_id),
+            std::stoll(timestamp),
+            std::stoll(type),
+            pqxx::binary_cast(payload)
+        )
     );
     tx.commit();
 }

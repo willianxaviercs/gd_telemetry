@@ -5,7 +5,7 @@ import time
 from dataclasses import dataclass
 from pathlib import Path
 
-from gen import device_event_pb2 as de
+from gen import payload_pb as payload
 
 PAYLOAD_VERSION = 1
 
@@ -19,7 +19,7 @@ class DroneState:
     battery_pct: int = 100
     link_quality_pct: int = 98
     gps_fix_type: int = 3
-    mission_state: int = de.MissionState.IDLE
+    mission_state: int = payload.MissionState.IDLE
     tick: int = 0
 
 
@@ -28,56 +28,38 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--device-id", type=int, required=True)
     parser.add_argument("--interval-seconds", type=float, required=True)
     parser.add_argument("--db-path", type=Path, required=True)
+
     return parser.parse_args()
 
-def build_position_event(*, event_id: int, device_id: int, timestamp_unix_ms: int, state: DroneState) -> bytes:
-    event = de.DeviceEvent(
-        event_id=event_id,
-        device_id=device_id,
-        timestamp_unix_ms=timestamp_unix_ms,
-        type=de.EventType.POSITION_SAMPLE,
-        payload_version=PAYLOAD_VERSION,
-    )
-    event.position_sample.latitude_deg = state.lat_deg
-    event.position_sample.longitude_deg = state.lon_deg
-    event.position_sample.altitude_m = state.altitude_m
-    event.position_sample.heading_deg = state.heading_deg
-    event.position_sample.speed_mps = state.speed_mps
-    return event.SerializeToString()
+def build_position_payload(*, state: DroneState) -> bytes:
+    result = payload.Payload()
+    result.version               = PAYLOAD_VERSION
+    result.position_sample.latitude_deg  = state.lat_deg
+    result.position_sample.longitude_deg = state.lon_deg
+    result.position_sample.altitude_m    = state.altitude_m
+    result.position_sample.heading_deg   = state.heading_deg
+    result.position_sample.speed_mps     = state.speed_mps
+
+    return result.SerializeToString()
 
 
-def build_health_event(*, event_id: int, device_id: int, timestamp_unix_ms: int, state: DroneState) -> bytes:
-    event = de.DeviceEvent(
-        event_id=event_id,
-        device_id=device_id,
-        timestamp_unix_ms=timestamp_unix_ms,
-        type=de.EventType.HEALTH_SAMPLE,
-        payload_version=PAYLOAD_VERSION,
-    )
-    event.health_sample.battery_pct = state.battery_pct
-    event.health_sample.link_quality_pct = state.link_quality_pct
-    event.health_sample.gps_fix_type = state.gps_fix_type
-    return event.SerializeToString()
+def build_health_payload(*, state: DroneState) -> bytes:
+    result = payload.Payload()
+    result.version                        = PAYLOAD_VERSION
+    result.health_sample.battery_pct      = state.battery_pct
+    result.health_sample.link_quality_pct = state.link_quality_pct
+    result.health_sample.gps_fix_type     = state.gps_fix_type
+
+    return result.SerializeToString()
 
 
-def build_mission_event(
-    *,
-    event_id: int,
-    device_id: int,
-    timestamp_unix_ms: int,
-    state: DroneState,
-    reason: int,
-) -> bytes:
-    event = de.DeviceEvent(
-        event_id=event_id,
-        device_id=device_id,
-        timestamp_unix_ms=timestamp_unix_ms,
-        type=de.EventType.MISSION_UPDATE,
-        payload_version=PAYLOAD_VERSION,
-    )
-    event.mission_update.state = state.mission_state
-    event.mission_update.reason = reason
-    return event.SerializeToString()
+def build_mission_payload(*, state: DroneState, reason: int) -> bytes:
+    result = payload.Payload()
+    result.version               = PAYLOAD_VERSION
+    result.mission_update.state  = state.mission_state
+    result.mission_update.reason = reason
+
+    return result.SerializeToString()
 
 
 def evolve_state(state: DroneState) -> None:
@@ -98,107 +80,73 @@ def evolve_state(state: DroneState) -> None:
 
 
 def insert_event(
-    connection: sqlite3.Connection,
-    *,
-    event_blob: bytes,
-) -> int:
-    cursor = connection.execute(
+        conn: sqlite3.Connection, *,
+        device_id: int, timestamp: int, type: int, payload: bytes
+        ) -> int:
+    conn.execute(
         """
-        INSERT INTO device_events (event_blob)
-        VALUES (?)
+        INSERT INTO device_events
+        (device_id, timestamp, type, payload)
+        VALUES (?, ?, ?, ?)
         """,
-        (event_blob,),
+        (device_id, timestamp, type, payload),
     )
-    return cursor.lastrowid
 
+def now_ms() -> int:
+    return int(time.time() * 1000)
 
+# TODO(wxr) - We need to start generating EVENT.TYPE
 def main() -> None:
     args = parse_args()
 
     if not args.db_path.exists():
         raise SystemExit(f"missing sqlite database: {args.db_path}")
 
-    connection = sqlite3.connect(args.db_path)
-    connection.execute("PRAGMA journal_mode = WAL")
+    conn= sqlite3.connect(args.db_path)
+    conn.execute("PRAGMA journal_mode = WAL")
 
     print(f"simulator: device_id={args.device_id} db_path={args.db_path}")
     state = DroneState()
-    state.mission_state = de.MissionState.TAKEOFF
-    next_event_id = 1
+    state.mission_state = payload.MissionState.TAKEOFF
 
-    startup_ts = int(time.time() * 1000)
-    startup_blob = build_mission_event(
-        event_id=next_event_id,
-        device_id=args.device_id,
-        timestamp_unix_ms=startup_ts,
+    ## first report at startup is a mission report
+    startup_blob = build_mission_payload(
         state=state,
-        reason=de.MissionReason.STARTUP,
+        reason=payload.MissionReason.STARTUP,
     )
-    startup_id = insert_event(
-        connection,
-        event_blob=startup_blob,
-    )
-    next_event_id += 1
-    connection.commit()
-    print(f"simulator: inserted id={startup_id} type={int(de.EventType.MISSION_UPDATE)}")
-    state.mission_state = de.MissionState.PATROL
+    insert_event(conn, device_id=args.device_id, timestamp=now_ms(), type=0, payload=startup_blob)
+    conn.commit()
+
+    state.mission_state = payload.MissionState.PATROL
 
     try:
         while True:
             evolve_state(state)
-            now_ms = int(time.time() * 1000)
 
-            position_blob = build_position_event(
-                event_id=next_event_id,
-                device_id=args.device_id,
-                timestamp_unix_ms=now_ms,
-                state=state,
-            )
-            row_id = insert_event(
-                connection,
-                event_blob=position_blob,
-            )
-            next_event_id += 1
-            event_type = int(de.EventType.POSITION_SAMPLE)
+            ## position report every tick
+            position_blob = build_position_payload(state=state)
+            insert_event(conn, device_id=args.device_id, timestamp=now_ms(), type=0, payload=position_blob)
 
+            ## health report every 5 ticks
             if state.tick % 5 == 0:
-                health_blob = build_health_event(
-                    event_id=next_event_id,
-                    device_id=args.device_id,
-                    timestamp_unix_ms=now_ms,
-                    state=state,
-                )
-                row_id = insert_event(
-                    connection,
-                    event_blob=health_blob,
-                )
-                next_event_id += 1
-                event_type = int(de.EventType.HEALTH_SAMPLE)
+                health_blob = build_health_payload(state=state)
+                insert_event(conn, device_id=args.device_id, timestamp=now_ms(), type=0, payload=health_blob)
 
-            if state.battery_pct == 25 and state.mission_state != de.MissionState.RETURN_TO_HOME:
-                state.mission_state = de.MissionState.RETURN_TO_HOME
-                mission_blob = build_mission_event(
-                    event_id=next_event_id,
-                    device_id=args.device_id,
-                    timestamp_unix_ms=now_ms,
-                    state=state,
-                    reason=de.MissionReason.LOW_BATTERY,
-                )
-                row_id = insert_event(
-                    connection,
-                    event_blob=mission_blob,
-                )
-                next_event_id += 1
-                event_type = int(de.EventType.MISSION_UPDATE)
+            #  mission report when battery is low
+            if state.battery_pct <= 25 and state.mission_state != paylod.MissionState.RETURN_TO_HOME:
+                state.mission_state = payload.MissionState.RETURN_TO_HOME
+                mission_blob = build_mission_payload(state=state, reason=de.MissionReason.LOW_BATTERY)
+                row_id = insert_event(conn, device_id=args.device_id, timestamp=now_ms(), type=0, payload=mission_blob)
 
-            connection.commit()
-            print(f"simulator: inserted id={row_id} type={event_type}")
+            conn.commit()
             time.sleep(args.interval_seconds)
+
     except KeyboardInterrupt:
         print("simulator: stopping")
     finally:
-        connection.close()
+        conn.close()
 
 
 if __name__ == "__main__":
     main()
+

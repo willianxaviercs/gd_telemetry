@@ -1,13 +1,6 @@
 syntax = "proto3";
 
-package gundam.v1;
-
-enum EventType {
-  UNSPECIFIED = 0;
-  POSITION_SAMPLE = 1;
-  HEALTH_SAMPLE = 2;
-  MISSION_UPDATE = 3;
-}
+package proto.v1;
 
 enum MissionState {
   MISSION_STATE_UNSPECIFIED = 0;
@@ -45,16 +38,13 @@ message MissionUpdate {
   MissionReason reason = 2;
 }
 
-message DeviceEvent {
-  uint64 event_id = 1;
-  uint64 device_id = 2;
-  uint64 timestamp_unix_ms = 3;
-  EventType type = 4;
-  uint32 payload_version = 5;
+message Payload {
+  uint32 version = 1;
 
-  oneof payload {
-    PositionSample position_sample = 10;
-    HealthSample health_sample = 11;
-    MissionUpdate mission_update = 12;
+  oneof s_union {
+    PositionSample position_sample = 2;
+    HealthSample   health_sample   = 3;
+    MissionUpdate  mission_update  = 4;
   }
 }
+
