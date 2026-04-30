@@ -173,7 +173,7 @@ function App() {
               <span>Type</span>
               <select value={selectedType} onChange={(event) => setSelectedType(event.target.value)}>
                 {typeOptions.map((option) => (
-                  <option key={option.value || "all"} value={option.value}>
+                  <option className="option-select" key={option.value || "all"} value={option.value}>
                     {option.label}
                   </option>
                 ))}
@@ -199,8 +199,6 @@ function App() {
                   <span className="event-type">{event.typeName}</span>
                   <span className="event-time">{formatTimestamp(event.timestamp)}</span>
                 </div>
-                <strong className="event-summary">{summarizeEvent(event)}</strong>
-                <span className="event-kind">{event.payloadKind}</span>
               </button>
             ))}
           </div>
