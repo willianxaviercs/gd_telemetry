@@ -55,6 +55,8 @@ extern const ::google::protobuf::internal::DescriptorTable descriptor_table_libs
 }  // extern "C"
 namespace proto {
 namespace v1 {
+enum EventType : int;
+extern const uint32_t EventType_internal_data_[];
 enum MissionReason : int;
 extern const uint32_t MissionReason_internal_data_[];
 enum MissionState : int;
@@ -80,6 +82,9 @@ extern const ::google::protobuf::internal::ClassDataFull PositionSample_class_da
 namespace google {
 namespace protobuf {
 template <>
+internal::EnumTraitsT<::proto::v1::EventType_internal_data_>
+    internal::EnumTraitsImpl::value<::proto::v1::EventType>;
+template <>
 internal::EnumTraitsT<::proto::v1::MissionReason_internal_data_>
     internal::EnumTraitsImpl::value<::proto::v1::MissionReason>;
 template <>
@@ -90,6 +95,44 @@ internal::EnumTraitsT<::proto::v1::MissionState_internal_data_>
 
 namespace proto {
 namespace v1 {
+enum EventType : int {
+  EVENT_TYPE_UNSPECIFIED = 0,
+  EVENT_TYPE_POSITION_SAMPLE = 1,
+  EVENT_TYPE_HEALTH_SAMPLE = 2,
+  EVENT_TYPE_MISSION_UPDATE = 3,
+  EventType_INT_MIN_SENTINEL_DO_NOT_USE_ =
+      ::std::numeric_limits<::int32_t>::min(),
+  EventType_INT_MAX_SENTINEL_DO_NOT_USE_ =
+      ::std::numeric_limits<::int32_t>::max(),
+};
+
+extern const uint32_t EventType_internal_data_[];
+inline constexpr EventType EventType_MIN =
+    static_cast<EventType>(0);
+inline constexpr EventType EventType_MAX =
+    static_cast<EventType>(3);
+inline bool EventType_IsValid(int value) {
+  return 0 <= value && value <= 3;
+}
+inline constexpr int EventType_ARRAYSIZE = 3 + 1;
+const ::google::protobuf::EnumDescriptor* PROTOBUF_NONNULL EventType_descriptor();
+template <typename T>
+const ::std::string& EventType_Name(T value) {
+  static_assert(::std::is_same<T, EventType>::value ||
+                    ::std::is_integral<T>::value,
+                "Incorrect type passed to EventType_Name().");
+  return EventType_Name(static_cast<EventType>(value));
+}
+template <>
+inline const ::std::string& EventType_Name(EventType value) {
+  return ::google::protobuf::internal::NameOfDenseEnum<EventType_descriptor, 0, 3>(
+      static_cast<int>(value));
+}
+inline bool EventType_Parse(
+    ::absl::string_view name, EventType* PROTOBUF_NONNULL value) {
+  return ::google::protobuf::internal::ParseNamedEnum<EventType>(EventType_descriptor(), name,
+                                           value);
+}
 enum MissionState : int {
   MISSION_STATE_UNSPECIFIED = 0,
   IDLE = 1,
@@ -1669,6 +1712,12 @@ inline Payload::SUnionCase Payload::s_union_case() const {
 namespace google {
 namespace protobuf {
 
+template <>
+struct is_proto_enum<::proto::v1::EventType> : std::true_type {};
+template <>
+inline const EnumDescriptor* PROTOBUF_NONNULL GetEnumDescriptor<::proto::v1::EventType>() {
+  return ::proto::v1::EventType_descriptor();
+}
 template <>
 struct is_proto_enum<::proto::v1::MissionState> : std::true_type {};
 template <>

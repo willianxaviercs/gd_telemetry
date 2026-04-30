@@ -5,7 +5,7 @@ import time
 from dataclasses import dataclass
 from pathlib import Path
 
-from gen import payload_pb as payload
+from gen.libs.proto import payload_pb2 as payload
 
 PAYLOAD_VERSION = 1
 
@@ -95,7 +95,6 @@ def insert_event(
 def now_ms() -> int:
     return int(time.time() * 1000)
 
-# TODO(wxr) - We need to start generating EVENT.TYPE
 def main() -> None:
     args = parse_args()
 
@@ -114,7 +113,13 @@ def main() -> None:
         state=state,
         reason=payload.MissionReason.STARTUP,
     )
-    insert_event(conn, device_id=args.device_id, timestamp=now_ms(), type=0, payload=startup_blob)
+    insert_event(
+        conn,
+        device_id=args.device_id,
+        timestamp=now_ms(),
+        type=payload.EventType.EVENT_TYPE_MISSION_UPDATE,
+        payload=startup_blob,
+    )
     conn.commit()
 
     state.mission_state = payload.MissionState.PATROL
@@ -125,18 +130,36 @@ def main() -> None:
 
             ## position report every tick
             position_blob = build_position_payload(state=state)
-            insert_event(conn, device_id=args.device_id, timestamp=now_ms(), type=0, payload=position_blob)
+            insert_event(
+                conn,
+                device_id=args.device_id,
+                timestamp=now_ms(),
+                type=payload.EventType.EVENT_TYPE_POSITION_SAMPLE,
+                payload=position_blob,
+            )
 
             ## health report every 5 ticks
             if state.tick % 5 == 0:
                 health_blob = build_health_payload(state=state)
-                insert_event(conn, device_id=args.device_id, timestamp=now_ms(), type=0, payload=health_blob)
+                insert_event(
+                    conn,
+                    device_id=args.device_id,
+                    timestamp=now_ms(),
+                    type=payload.EventType.EVENT_TYPE_HEALTH_SAMPLE,
+                    payload=health_blob,
+                )
 
             #  mission report when battery is low
             if state.battery_pct <= 25 and state.mission_state != payload.MissionState.RETURN_TO_HOME:
                 state.mission_state = payload.MissionState.RETURN_TO_HOME
                 mission_blob = build_mission_payload(state=state, reason=payload.MissionReason.LOW_BATTERY)
-                insert_event(conn, device_id=args.device_id, timestamp=now_ms(), type=0, payload=mission_blob)
+                insert_event(
+                    conn,
+                    device_id=args.device_id,
+                    timestamp=now_ms(),
+                    type=payload.EventType.EVENT_TYPE_MISSION_UPDATE,
+                    payload=mission_blob,
+                )
 
             conn.commit()
             time.sleep(args.interval_seconds)
@@ -149,4 +172,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

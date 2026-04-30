@@ -2,6 +2,13 @@ syntax = "proto3";
 
 package proto.v1;
 
+enum EventType {
+  EVENT_TYPE_UNSPECIFIED = 0;
+  EVENT_TYPE_POSITION_SAMPLE = 1;
+  EVENT_TYPE_HEALTH_SAMPLE = 2;
+  EVENT_TYPE_MISSION_UPDATE = 3;
+}
+
 enum MissionState {
   MISSION_STATE_UNSPECIFIED = 0;
   IDLE = 1;
@@ -47,4 +54,3 @@ message Payload {
     MissionUpdate  mission_update  = 4;
   }
 }
-

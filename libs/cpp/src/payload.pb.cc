@@ -138,7 +138,7 @@ PROTOBUF_ATTRIBUTE_NO_DESTROY PROTOBUF_CONSTINIT
 }  // namespace v1
 }  // namespace proto
 static const ::_pb::EnumDescriptor* PROTOBUF_NONNULL
-    file_level_enum_descriptors_libs_2fproto_2fpayload_2eproto[2];
+    file_level_enum_descriptors_libs_2fproto_2fpayload_2eproto[3];
 static constexpr const ::_pb::ServiceDescriptor* PROTOBUF_NONNULL* PROTOBUF_NULLABLE
     file_level_service_descriptors_libs_2fproto_2fpayload_2eproto = nullptr;
 const ::uint32_t
@@ -216,19 +216,22 @@ const char descriptor_table_protodef_libs_2fproto_2fpayload_2eproto[] ABSL_ATTRI
     "oto.v1.PositionSampleH\000\022/\n\rhealth_sample"
     "\030\003 \001(\0132\026.proto.v1.HealthSampleH\000\0221\n\016miss"
     "ion_update\030\004 \001(\0132\027.proto.v1.MissionUpdat"
-    "eH\000B\t\n\007s_union*p\n\014MissionState\022\035\n\031MISSIO"
-    "N_STATE_UNSPECIFIED\020\000\022\010\n\004IDLE\020\001\022\013\n\007TAKEO"
-    "FF\020\002\022\n\n\006PATROL\020\003\022\022\n\016RETURN_TO_HOME\020\004\022\n\n\006"
-    "LANDED\020\005*v\n\rMissionReason\022\036\n\032MISSION_REA"
-    "SON_UNSPECIFIED\020\000\022\013\n\007STARTUP\020\001\022\022\n\016PATROL"
-    "_STARTED\020\002\022\017\n\013LOW_BATTERY\020\003\022\023\n\017MANUAL_OV"
-    "ERRIDE\020\004b\006proto3"
+    "eH\000B\t\n\007s_union*\204\001\n\tEventType\022\032\n\026EVENT_TY"
+    "PE_UNSPECIFIED\020\000\022\036\n\032EVENT_TYPE_POSITION_"
+    "SAMPLE\020\001\022\034\n\030EVENT_TYPE_HEALTH_SAMPLE\020\002\022\035"
+    "\n\031EVENT_TYPE_MISSION_UPDATE\020\003*p\n\014Mission"
+    "State\022\035\n\031MISSION_STATE_UNSPECIFIED\020\000\022\010\n\004"
+    "IDLE\020\001\022\013\n\007TAKEOFF\020\002\022\n\n\006PATROL\020\003\022\022\n\016RETUR"
+    "N_TO_HOME\020\004\022\n\n\006LANDED\020\005*v\n\rMissionReason"
+    "\022\036\n\032MISSION_REASON_UNSPECIFIED\020\000\022\013\n\007STAR"
+    "TUP\020\001\022\022\n\016PATROL_STARTED\020\002\022\017\n\013LOW_BATTERY"
+    "\020\003\022\023\n\017MANUAL_OVERRIDE\020\004b\006proto3"
 };
 static ::absl::once_flag descriptor_table_libs_2fproto_2fpayload_2eproto_once;
 PROTOBUF_CONSTINIT const ::_pbi::DescriptorTable descriptor_table_libs_2fproto_2fpayload_2eproto = {
     false,
     false,
-    776,
+    911,
     descriptor_table_protodef_libs_2fproto_2fpayload_2eproto,
     "libs/proto/payload.proto",
     &descriptor_table_libs_2fproto_2fpayload_2eproto_once,
@@ -243,15 +246,21 @@ PROTOBUF_CONSTINIT const ::_pbi::DescriptorTable descriptor_table_libs_2fproto_2
 };
 namespace proto {
 namespace v1 {
-const ::google::protobuf::EnumDescriptor* PROTOBUF_NONNULL MissionState_descriptor() {
+const ::google::protobuf::EnumDescriptor* PROTOBUF_NONNULL EventType_descriptor() {
   ::google::protobuf::internal::AssignDescriptors(&descriptor_table_libs_2fproto_2fpayload_2eproto);
   return file_level_enum_descriptors_libs_2fproto_2fpayload_2eproto[0];
+}
+PROTOBUF_CONSTINIT const uint32_t EventType_internal_data_[] = {
+    262144u, 0u, };
+const ::google::protobuf::EnumDescriptor* PROTOBUF_NONNULL MissionState_descriptor() {
+  ::google::protobuf::internal::AssignDescriptors(&descriptor_table_libs_2fproto_2fpayload_2eproto);
+  return file_level_enum_descriptors_libs_2fproto_2fpayload_2eproto[1];
 }
 PROTOBUF_CONSTINIT const uint32_t MissionState_internal_data_[] = {
     393216u, 0u, };
 const ::google::protobuf::EnumDescriptor* PROTOBUF_NONNULL MissionReason_descriptor() {
   ::google::protobuf::internal::AssignDescriptors(&descriptor_table_libs_2fproto_2fpayload_2eproto);
-  return file_level_enum_descriptors_libs_2fproto_2fpayload_2eproto[1];
+  return file_level_enum_descriptors_libs_2fproto_2fpayload_2eproto[2];
 }
 PROTOBUF_CONSTINIT const uint32_t MissionReason_internal_data_[] = {
     327680u, 0u, };
