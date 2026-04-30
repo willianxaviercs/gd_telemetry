@@ -17,10 +17,10 @@ The simulator currently emits three event types for a basic autonomous drone:
 The simulator derives the SQLite path from the device ID and the repo runtime layout:
 
 ```bash
-python3 simulator/main.py \
+python3 main.py \
     --device-id <device_id> \
     --interval-seconds <seconds> \
-    --db_path </path/to/device.db>
+    --db-path </path/to/device.db>
 ```
 
 ## Dependencies

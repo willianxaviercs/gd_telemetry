@@ -1,6 +1,6 @@
 # Telemetry
 
-Minimal distributed-system scaffold
+Minimal telemetry distributed-system scaffold
 
 ## Structure
 
@@ -18,19 +18,9 @@ Minimal distributed-system scaffold
 
 ## Development
 
-```bash
-make build
-```
-
-Builds everything that needs to be build.
+The development workflow can be found using the command below
 
 ```bash
-make run
-```
-Runs local development environment.
-
-```bash
-make stop
+make help
 ```
 
-Stop and clean local development environment.

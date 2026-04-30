@@ -13,8 +13,8 @@ Responsibility:
 ```bash
 ./edge-daemon \
   --device-db-path /path/to/device.db \
-  --poll-interval-seconds <seconds>> \
-  --redis-stream <stream_name>
+  --poll-interval-seconds <seconds> \
+  --redis-stream <stream_name> \
   --redis-host <hostname> \
   --redis-port <port>
 ```

@@ -82,7 +82,7 @@ def evolve_state(state: DroneState) -> None:
 def insert_event(
         conn: sqlite3.Connection, *,
         device_id: int, timestamp: int, type: int, payload: bytes
-        ) -> int:
+        ) -> None:
     conn.execute(
         """
         INSERT INTO device_events
@@ -133,10 +133,10 @@ def main() -> None:
                 insert_event(conn, device_id=args.device_id, timestamp=now_ms(), type=0, payload=health_blob)
 
             #  mission report when battery is low
-            if state.battery_pct <= 25 and state.mission_state != paylod.MissionState.RETURN_TO_HOME:
+            if state.battery_pct <= 25 and state.mission_state != payload.MissionState.RETURN_TO_HOME:
                 state.mission_state = payload.MissionState.RETURN_TO_HOME
-                mission_blob = build_mission_payload(state=state, reason=de.MissionReason.LOW_BATTERY)
-                row_id = insert_event(conn, device_id=args.device_id, timestamp=now_ms(), type=0, payload=mission_blob)
+                mission_blob = build_mission_payload(state=state, reason=payload.MissionReason.LOW_BATTERY)
+                insert_event(conn, device_id=args.device_id, timestamp=now_ms(), type=0, payload=mission_blob)
 
             conn.commit()
             time.sleep(args.interval_seconds)

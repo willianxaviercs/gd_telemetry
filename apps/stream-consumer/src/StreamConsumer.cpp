@@ -1,10 +1,25 @@
 #include "Config.h"
 #include "StreamConsumer.h"
 
+#include <stdexcept>
 #include <iostream>
 #include <format>
 
 using namespace proto::v1;
+
+namespace
+{
+const std::string& RequireField(const Fields& fields, const std::string& name)
+{
+    for (const auto& [field_name, field_value] : fields)
+    {
+        if (field_name == name)
+            return field_value;
+    }
+
+    throw std::runtime_error(std::format("missing stream field: {}", name));
+}
+}
 
 StreamConsumer::StreamConsumer(
         ConsumerConfig& config,
@@ -58,18 +73,17 @@ void StreamConsumer::Run(void) const
 
                     if (fields.empty())
                         continue;
-                    
-                    // TODO(wxr): Can we use type data other than string??
-                    // example:
-                    // fields [{"device_id", "1"}, {"timestamp", "172731231230"}, {"type", "1"}, {"payload", "0xffafbgdc..."}] 
 
-                    const auto& device_id = fields[0].second;
-                    const auto& timestamp = fields[1].second;
-                    const auto& type      = fields[2].second;
-                    const auto& blob      = fields[3].second;
+                    const auto& device_id = RequireField(fields, "device_id");
+                    const auto& timestamp = RequireField(fields, "timestamp");
+                    const auto& type      = RequireField(fields, "type");
+                    const auto& blob      = RequireField(fields, "payload");
 
                     Payload p;
-                    p.ParseFromString(blob);
+                    if (!p.ParseFromString(blob))
+                        throw std::runtime_error(std::format(
+                            "invalid protobuf payload for stream entry {}",
+                            entry.first));
 
                     std::cout << p.DebugString() << std::endl;
                     storage_.InsertEvent(p, device_id, timestamp, type);
@@ -80,9 +94,7 @@ void StreamConsumer::Run(void) const
         }
         catch (const std::exception& e)
         {
-            ;
-            //std::cerr << "error: " << e.what() << std::endl;
+            std::cerr << "error: " << e.what() << std::endl;
         }
     }
 }
-
