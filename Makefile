@@ -23,6 +23,14 @@ build-cpp:
   		-DVCPKG_TARGET_TRIPLET=x64-linux
 	cmake --build $(BUILD_PATH)
 
+build-web-ui:
+	docker build -t $(PROJECT_NAME)/web-ui:latest \
+		-f platform/docker/web-ui/Dockerfile .
+
+build-web-api:
+	docker build -t $(PROJECT_NAME)/web-api:latest \
+		-f platform/docker/web-api/Dockerfile .
+
 build-docker-consumer:
 	docker build -t $(PROJECT_NAME)/stream-consumer:latest \
 		-f platform/docker/stream-consumer/Dockerfile .
@@ -35,12 +43,12 @@ build-docker-postgres:
 	docker build -t $(PROJECT_NAME)/postgres:latest \
 		-f platform/docker/postgres/Dockerfile .
 
-build-docker-all: build-docker-consumer build-docker-device build-docker-postgres
+build-docker-all: build-docker-consumer build-docker-device build-docker-postgres build-web-api build-web-ui
 
 build-all: build-cpp build-docker
 
 run: check-env
-	$(COMPOSE) up -d --wait redis postgres stream-consumer
+	$(COMPOSE) up -d --wait redis postgres stream-consumer web-api web-ui
 	$(RUNTIME_BIN)/run.sh
 
 check-env:

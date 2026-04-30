@@ -3,17 +3,17 @@ const path = require("path");
 const protobuf = require("protobufjs");
 const { Pool } = require("pg");
 
-const port = Number(process.env.PORT || 3000);
-const fixedEventLimit = 200;
-const allowedOrigin = process.env.CORS_ALLOW_ORIGIN || "http://localhost:5173";
+const port = Number(process.env.API_PORT);
+const fixedEventLimit = 100;
+const allowedOrigin =  `http://${process.env.UI_HOST}:${process.env.UI_PORT}`;
 const mockDeviceIds = parseMockDeviceIds(process.env.MOCK_DEVICE_IDS);
 
 const pool = new Pool({
-    host: process.env.DB_HOST || "127.0.0.1",
-    port: Number(process.env.DB_PORT || 5432),
-    database: process.env.DB_NAME || "gundam",
-    user: process.env.DB_USER || "gundam",
-    password: process.env.DB_PASSWORD || "gundam",
+    host: process.env.DB_HOST,
+    port: Number(process.env.DB_PORT),
+    database: process.env.DB_NAME,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
 });
 
 const protoPath = path.join(__dirname, "../../../libs/proto/payload.proto");
@@ -29,7 +29,7 @@ function parseMockDeviceIds(input) {
     return input
         .split(",")
         .map((value) => Number(value.trim()))
-        .filter((value) => Number.isInteger(value) && value > 0);
+        .filter((value) => Number.isInteger(value) && value >= 0);
 }
 
 function buildCorsHeaders(req) {
@@ -234,4 +234,6 @@ const server = http.createServer(async (req, res) => {
 
 server.listen(port, () => {
     console.log(`api listening on http://localhost:${port}`);
+    console.log(`Allowed Origin: ${allowedOrigin}`);
 });
+

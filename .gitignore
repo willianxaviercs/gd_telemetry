@@ -13,5 +13,5 @@ compile_commands.json
 platform/runtime/topology/devices.json
 
 node_modules/
+apps/web-ui/dist/
 __pycache__/
-

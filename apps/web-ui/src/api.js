@@ -1,4 +1,7 @@
-const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL || "http://localhost:3000").replace(/\/+$/, "");
+const runtimeConfig = window.__APP_CONFIG__ || {};
+const apiHost = runtimeConfig.API_HOST || import.meta.env.API_HOST || window.location.hostname;
+const apiPort = runtimeConfig.API_PORT || import.meta.env.API_PORT || "3000";
+const apiBaseUrl = `http://${apiHost}:${apiPort}`;
 
 async function readJson(response) {
   const contentType = response.headers.get("content-type") || "";
