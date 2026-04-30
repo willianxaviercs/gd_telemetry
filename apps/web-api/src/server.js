@@ -5,6 +5,7 @@ const { Pool } = require("pg");
 
 const port = Number(process.env.PORT || 3000);
 const fixedEventLimit = 200;
+const allowedOrigin = process.env.CORS_ALLOW_ORIGIN || "http://localhost:5173";
 const mockDeviceIds = parseMockDeviceIds(process.env.MOCK_DEVICE_IDS);
 
 const pool = new Pool({
@@ -31,13 +32,30 @@ function parseMockDeviceIds(input) {
         .filter((value) => Number.isInteger(value) && value > 0);
 }
 
-function writeJson(res, statusCode, payload) {
-    res.writeHead(statusCode, { "Content-Type": "application/json" });
+function buildCorsHeaders(req) {
+    const origin = req.headers.origin;
+    if (origin && origin === allowedOrigin) {
+        return {
+            "Access-Control-Allow-Origin": origin,
+            "Access-Control-Allow-Methods": "GET, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type",
+            Vary: "Origin",
+        };
+    }
+
+    return {};
+}
+
+function writeJson(req, res, statusCode, payload) {
+    res.writeHead(statusCode, {
+        "Content-Type": "application/json",
+        ...buildCorsHeaders(req),
+    });
     res.end(JSON.stringify(payload));
 }
 
-function writeError(res, statusCode, code, message) {
-    writeJson(res, statusCode, {
+function writeError(req, res, statusCode, code, message) {
+    writeJson(req, res, statusCode, {
         error: {
             code,
             message,
@@ -129,25 +147,25 @@ async function queryDeviceEvents(deviceId, eventType) {
     });
 }
 
-async function getHealth(res) {
+async function getHealth(req, res) {
     try {
         await pool.query("SELECT 1");
-        writeJson(res, 200, {
+        writeJson(req, res, 200, {
             status: "ok",
             db: "ok",
         });
     }
     catch (error) {
         console.error("health check failed", error);
-        writeJson(res, 503, {
+        writeJson(req, res, 503, {
             status: "error",
             db: "unavailable",
         });
     }
 }
 
-function getDevices(res) {
-    writeJson(res, 200, {
+function getDevices(req, res) {
+    writeJson(req, res, 200, {
         devices: mockDeviceIds.map((id) => ({ id })),
     });
 }
@@ -155,12 +173,12 @@ function getDevices(res) {
 async function getDeviceEvents(req, res, pathname, searchParams) {
     const deviceId = parseDeviceId(pathname);
     if (deviceId === null) {
-        writeError(res, 404, "not_found", "route not found");
+        writeError(req, res, 404, "not_found", "route not found");
         return;
     }
 
     if (!mockDeviceIds.includes(deviceId)) {
-        writeError(res, 404, "device_not_found", `unknown device '${deviceId}'`);
+        writeError(req, res, 404, "device_not_found", `unknown device '${deviceId}'`);
         return;
     }
 
@@ -169,20 +187,20 @@ async function getDeviceEvents(req, res, pathname, searchParams) {
         eventType = parseOptionalType(searchParams.get("type"));
     }
     catch (error) {
-        writeError(res, 400, "invalid_type_filter", error.message);
+        writeError(req, res, 400, "invalid_type_filter", error.message);
         return;
     }
 
     try {
         const events = await queryDeviceEvents(deviceId, eventType);
-        writeJson(res, 200, {
+        writeJson(req, res, 200, {
             deviceId,
             events,
         });
     }
     catch (error) {
         console.error("failed to fetch device events", error);
-        writeError(res, 500, "device_events_query_failed", "failed to fetch device events");
+        writeError(req, res, 500, "device_events_query_failed", "failed to fetch device events");
     }
 }
 
@@ -190,13 +208,19 @@ const server = http.createServer(async (req, res) => {
     const url = new URL(req.url, `http://${req.headers.host || "localhost"}`);
     const { pathname, searchParams } = url;
 
+    if (req.method === "OPTIONS") {
+        res.writeHead(204, buildCorsHeaders(req));
+        res.end();
+        return;
+    }
+
     if (req.method === "GET" && pathname === "/health") {
-        await getHealth(res);
+        await getHealth(req, res);
         return;
     }
 
     if (req.method === "GET" && pathname === "/devices") {
-        getDevices(res);
+        getDevices(req, res);
         return;
     }
 
@@ -205,7 +229,7 @@ const server = http.createServer(async (req, res) => {
         return;
     }
 
-    writeError(res, 404, "not_found", "route not found");
+    writeError(req, res, 404, "not_found", "route not found");
 });
 
 server.listen(port, () => {
