@@ -10,11 +10,12 @@ PROJECT_NAME := telemetry
 help:
 	@printf "Project development workflow\n\n"
 	@printf "commands:\n\n"
-	@printf "  %-10s %s\n" "build-all"     "Build entire project"
-	@printf "  %-10s %s\n" "build-cpp"     "Build cpp apps"
-	@printf "  %-10s %s\n" "build-docker"  "Build docker images"
-	@printf "  %-10s %s\n" "run"           "Run development environment"
-	@printf "  %-10s %s\n" "stop"          "Stop development environment"
+	@printf "  %-15s %s\n" "help"          "Shows this help"
+	@printf "  %-15s %s\n" "build-all"     "Build entire project"
+	@printf "  %-15s %s\n" "build-cpp"     "Build all cpp apps"
+	@printf "  %-15s %s\n" "build-docker"  "Build all docker images"
+	@printf "  %-15s %s\n" "run"           "Runs development environment"
+	@printf "  %-15s %s\n" "stop"          "Stops development environment"
 
 build-cpp:
 	cmake -B $(BUILD_PATH) \
