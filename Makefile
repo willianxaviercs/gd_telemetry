@@ -23,15 +23,19 @@ build-cpp:
   		-DVCPKG_TARGET_TRIPLET=x64-linux
 	cmake --build $(BUILD_PATH)
 
-build-docker:
-	docker build -t $(PROJECT_NAME)/postgres:latest \
-		-f platform/docker/postgres/Dockerfile .
+build-docker-consumer:
+	docker build -t $(PROJECT_NAME)/stream-consumer:latest \
+		-f platform/docker/stream-consumer/Dockerfile .
 
+build-docker-device:
 	docker build -t $(PROJECT_NAME)/device-sim:latest \
 		-f platform/docker/edge-device/Dockerfile .
 
-	docker build -t $(PROJECT_NAME)/stream-consumer:latest \
-		-f platform/docker/stream-consumer/Dockerfile .
+build-docker-postgres:
+	docker build -t $(PROJECT_NAME)/postgres:latest \
+		-f platform/docker/postgres/Dockerfile .
+
+build-docker-all: build-docker-consumer build-docker-device build-docker-postgres
 
 build-all: build-cpp build-docker
 
