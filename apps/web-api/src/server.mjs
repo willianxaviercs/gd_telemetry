@@ -1,7 +1,11 @@
-const http = require("http");
-const path = require("path");
-const protobuf = require("protobufjs");
-const { Pool } = require("pg");
+// server.mjs
+
+import { createServer } from 'node:http';
+import { fileURLToPath } from 'node:url';
+import path from 'node:path';
+
+import { Pool } from 'pg';
+import protobuf from 'protobufjs';
 
 const port = Number(process.env.API_PORT);
 const fixedEventLimit = 100;
@@ -16,6 +20,7 @@ const pool = new Pool({
     password: process.env.DB_PASSWORD,
 });
 
+const __dirname = fileURLToPath(path.dirname(import.meta.url));
 const protoPath = path.join(__dirname, "../../../libs/proto/payload.proto");
 const protoRoot = protobuf.loadSync(protoPath);
 const payloadType = protoRoot.lookupType("proto.v1.Payload");
@@ -204,7 +209,7 @@ async function getDeviceEvents(req, res, pathname, searchParams) {
     }
 }
 
-const server = http.createServer(async (req, res) => {
+const server = createServer(async (req, res) => {
     const url = new URL(req.url, `http://${req.headers.host || "localhost"}`);
     const { pathname, searchParams } = url;
 
