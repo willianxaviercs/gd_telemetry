@@ -2,10 +2,13 @@
 .DEFAULT_GOAL := help
 
 SHELL := /bin/bash
+
 COMPOSE := docker compose --env-file .env -f platform/docker/backend/docker-compose.yml
+
 RUNTIME_BIN := ./platform/runtime/tools
 BUILD_PATH := build
 PROJECT_NAME := telemetry
+TOOLCHAIN := ${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake
 
 help:
 	@printf "Project development workflow\n\n"
@@ -19,8 +22,9 @@ help:
 
 build-cpp:
 	cmake -B $(BUILD_PATH) \
-  		-DCMAKE_TOOLCHAIN_FILE=~/vcpkg/scripts/buildsystems/vcpkg.cmake \
+  		-DCMAKE_TOOLCHAIN_FILE=$(TOOLCHAIN) \
   		-DVCPKG_TARGET_TRIPLET=x64-linux
+
 	cmake --build $(BUILD_PATH)
 
 build-web-ui:
@@ -43,7 +47,8 @@ build-docker-postgres:
 	docker build -t $(PROJECT_NAME)/postgres:latest \
 		-f platform/docker/postgres/Dockerfile .
 
-build-docker-all: build-docker-consumer build-docker-device build-docker-postgres build-web-api build-web-ui
+build-docker-all: build-docker-consumer build-docker-device \
+	              build-docker-postgres build-web-api build-web-ui
 
 build-all: build-cpp build-docker
 

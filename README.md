@@ -2,6 +2,10 @@
 
 Minimal telemetry distributed-system scaffold
 
+## Dependencies
+
+cmake, gcc, vcpkg, node, python, sqlite3
+
 ## Structure
 
 ```
