@@ -22,7 +22,7 @@ cmake, gcc, vcpkg, node, python, sqlite3
 
 ## Development
 
-The development workflow can be found using the command below
+The development workflow can be found using the command below:
 
 ```bash
 make help
